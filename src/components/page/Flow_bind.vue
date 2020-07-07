@@ -47,16 +47,6 @@
                 ></el-tree>
               </div>
             </el-form-item>
-            <!-- 
-                  1.先炫染树
-                    data : 数据
-                    props ： 配置
-                    show-checkbox : 选择框
-                    default-expand-all ： 默认全部展开
-                    node-key ： 用来指定每一个节点，被选中之后的唯一标识（一般用当前节点id做唯一标识）
-                  2.然后勾选默认的/之前已经选择的 default-checked-keys=[选中的节点id，通过递归得到]
-                  3.获取当前勾选的节点id
-            -->
           </el-col>
           <el-col :span="12" id="bind-flow-right">
             <el-form-item label="流程搜索：" prop="flowSearch">
@@ -187,12 +177,9 @@ export default {
   },
   methods: {
     clearSearch() {},
+    
     // 更新流程绑定的数据到服务器
     updateFlowBindData() {
-      // 先处理tree的数据（选中那些节点id）
-      // 获取 所有半选状态的id
-      // 获取 所有全选的id
-      // 合并半选和 全选状态的id 到一个完整的数组中去，通过join，转换成一个字符串（以逗号分隔的字符串）
       const k1 = this.$refs.tree.getHalfCheckedKeys(); // 半选
       const k2 = this.$refs.tree.getCheckedKeys(); // 全选
 

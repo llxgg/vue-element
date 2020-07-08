@@ -47,6 +47,7 @@ import bus from "../common/bus";
 export default {
   data() {
     return {
+      parentPath: "",
       collapse: true,
       items: [
         {
@@ -195,12 +196,41 @@ export default {
       ]
     };
   },
+  watch: {
+    // $route(newVal,oldVal){
+    //     console.log('==========路由变化=============',newVal,oldVal);
+    //     const {fullPath, params, query} = newVal;
+    //     if(fullPath == "/add_flow"){
+    //     }
+    // }
+    parentPath: function(newVal) {}
+  },
+
+  created() {
+    // 通过 Event Bus 进行组件间通信，来折叠侧边栏
+    bus.$on("collapse", msg => {
+      this.collapse = msg;
+    });
+
+    console.error("获取到的父url：", this.$route, this.$route.query.parentPath);
+
+    this.parentPath = this.$route.query.parentPath;
+  },
+
   computed: {
     onRoutes() {
       console.log("左侧菜单栏那个高亮：", this.$route.path);
+      var reg = RegExp(/_/);
+      console.log("是否是子目录：", reg.test(this.$route.path));
 
-      return this.$route.path.replace("/", "");
-    },
+      if (this.$route.path == "/add_flow") {
+        return "flowdefine";
+      } else if (this.$route.path == "/bind_flow") {
+        return "flowauth";
+      } else {
+        return this.$route.path.replace("/", "");
+      }
+    }
 
     // defaultActive() {
     //   return console.log("拿到的是什么：", this.$router.mate);
@@ -220,12 +250,6 @@ export default {
     //     return newArr[0];
     //   }
     // }
-  },
-  created() {
-    // 通过 Event Bus 进行组件间通信，来折叠侧边栏
-    bus.$on("collapse", msg => {
-      this.collapse = msg;
-    });
   }
 };
 </script>

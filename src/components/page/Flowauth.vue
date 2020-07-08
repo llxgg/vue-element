@@ -3,16 +3,23 @@
   <div>
     <!-- 面包屑 -->
     <div class="crumbs">
-      <el-breadcrumb separator="/">
+      <!-- <el-breadcrumb separator="/">
         <el-breadcrumb-item>
           <i class="el-icon-lx-calendar"></i> 流程配置 / 流程授权
         </el-breadcrumb-item>
+      </el-breadcrumb> -->
+
+       <el-breadcrumb separator-class="el-icon-arrow-right" separator=">">
+        <el-breadcrumb-item>流程配置</el-breadcrumb-item>
+        <el-breadcrumb-item>流程授权</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
 
+  
+
     <!-- card -->
     <div class="container">
-      <div  style="margin-bottom: 3px;">流程授权</div>
+      <div style="margin-bottom: 3px;">流程授权</div>
       <!-- 条件筛选 -->
       <div class="table-wrapper">
         <el-input
@@ -86,7 +93,7 @@
 
         <!--  -->
         <div class="screen-btn">
-          <el-button type="primary" style="width: 80px;" @click="handleQueryResult">查询结果</el-button>
+          <el-button type="primary" style="width: 80px;" @click="getTableData">查询结果</el-button>
           <el-button style="width: 80px;margin-left: 10px;" @click="resetQuery">重置</el-button>
         </div>
       </div>
@@ -111,52 +118,54 @@
       <div style="margin-top: 8px;">
         <el-table
           :data="tableData"
-          height="250"
+          min-height="250"
           border
           style="width: 100%"
           :header-cell-style="setHeaderStyle"
           :cell-style="setRowStyle"
         >
           <el-table-column type="selection" width="55" :show-overflow-tooltip="true"></el-table-column>
-          <el-table-column label="序号" width="60" type="index"></el-table-column>
+          <el-table-column label="序号" width="50" type="index"></el-table-column>
 
-          <el-table-column prop="direction" label="申报方向" width="150"></el-table-column>
-          <el-table-column prop="directCode" label="申报编码" width="150"></el-table-column>
-          <el-table-column prop="project" label="所属项目" width="150"></el-table-column>
-          <el-table-column prop="name" label="流程名称" width="150"></el-table-column>
-          <el-table-column prop="edition" label="流程版本" width="100"></el-table-column>
+          <el-table-column prop="declarationName" label="申报方向" width="130"></el-table-column>
+          <el-table-column prop="directCode" label="申报编码" width="130"></el-table-column>
+          <el-table-column prop="projectName" label="所属项目" width="150"></el-table-column>
+          <el-table-column prop="flowName" label="流程名称" width="150"></el-table-column>
+          <el-table-column prop="flowVersion" label="流程版本" width="80"></el-table-column>
 
-          <el-table-column prop="roleStatus" label="授权状态" width="100">
+          <el-table-column prop="grantStatus" label="授权状态" width="80">
             <template slot-scope="scope">
               <span>{{scope.row.roleStatus == 1 ? roleStatues[0].label : roleStatues[1].label}}</span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="sendStatus" label="发布状态" width="100">
+          <el-table-column prop="publishStatus" label="发布状态" width="80">
             <template scope="scope">
               <span>{{scope.row.sendStatus == 1 ? sendStatues[0].label : sendStatues[1].label}}</span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="create_time" label="创建时间">
-            <template slot-scope="scope">
+          <el-table-column prop="createTime" label="创建时间">
+            <!-- <template slot-scope="scope">
               <span>{{formatDate(scope.row.create_time, "yy-mm-dd hh:mm:ss")}}</span>
-            </template>
+            </template>-->
           </el-table-column>
 
-          <el-table-column prop="address" label="操作" width="260">
+          <el-table-column label="操作" width="230">
             <template slot-scope="scope">
               <el-button
                 size="mini"
-                @click="handleRole(scope.$index, scope.row)"
-                v-if="scope.row.roleStatus == 2"
+                style='margin-right:6px;'
+                @click="handleRole(scope.row)"
+                v-if="scope.row.grantStatus == 0"
               >授权</el-button>
               <el-button
                 size="mini"
-                @click="handleEdit(scope.$index, scope.row)"
-                v-else-if="scope.row.roleStatus == 1"
+                style='margin-right:6px;'
+                @click="handleEdit(scope.row)"
+                v-else-if="scope.row.grantStatus == 1"
               >编辑</el-button>
-              <el-button size="mini" type="primary" @click="handleSend(scope.row)">发布</el-button>
+              <el-button size="mini" type="primary" @click="handleSend(scope.row)" style='margin-right:6px;'>发布</el-button>
               <el-button size="mini" type="danger" @click="handleRemove(scope.row)">删除</el-button>
             </template>
           </el-table-column>
@@ -168,7 +177,7 @@
           @current-change="handleCurrentChange"
           :current-page="pagenum"
           :page-size="pagesize"
-          :page-sizes="[10, 20, 30]"
+          :page-sizes="[5, 10, 15]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
           style="margin-top: 10px;width:100%;overflow:hidden;"
@@ -189,6 +198,8 @@
 
 <script>
 import { timestamp, timestampYMD } from "../../util/date.js";
+import { post1 } from "../../util/http.js";
+import { getDeclareList } from "../../util/api.js";
 
 export default {
   components: {},
@@ -224,23 +235,23 @@ export default {
       // 授权状态
       roleStatues: [
         {
-          value: 1,
-          label: "已授权"
+          value: 0,
+          label: "未授权"
         },
         {
-          value: 2,
-          label: "未授权"
+          value: 1,
+          label: "已授权"
         }
       ],
       // 发布状态
       sendStatues: [
         {
-          value: 1,
-          label: "已发布"
+          value: 0,
+          label: "未发布"
         },
         {
-          value: 2,
-          label: "未发布"
+          value: 1,
+          label: "已发布"
         }
       ],
 
@@ -264,8 +275,8 @@ export default {
         }
       ],
       tableData: [], // 表格数据
-      pagenum: 0, // 当前页码
-      pagesize: 10, // 每页多少条
+      pagenum: 1, // 当前页码
+      pagesize: 5, // 每页多少条
       total: 100, // 总条数
 
       // 日期时间处理
@@ -291,8 +302,8 @@ export default {
   },
   methods: {
     // 项目绑定
-    goPage(){
-      this.$router.push({path: "/bind_flow"})
+    goPage() {
+      this.$router.push({ path: "/bind_flow",query: { parentPath: "flowauth" } });
     },
     // 设置表格内容居中
     setHeaderStyle() {
@@ -325,15 +336,19 @@ export default {
     },
 
     // 按要求查询数据：
-    handleQueryResult() {
-      console.log("需要查询查询那些信息：", this.screenData);
+    // handleQueryResult() {},
+
+    //获取表格数据
+    getTableData() {
       let me = this;
+
       let startTime = me.screenData.startDate
         ? timestampYMD(me.screenData.startDate) + " 00:00:00"
         : "";
       let endTime = me.screenData.endDate
         ? timestampYMD(me.screenData.endDate) + " 23:59:59"
         : "";
+
       // 防止用户只选一个
       if ((startTime && !endTime) || (!startTime && endTime)) {
         me.$message({
@@ -343,57 +358,26 @@ export default {
         return;
       }
 
-      // 结束日期小于开始日期
-
-      console.log("startTime", new Date(startTime));
-
       // 获取其他筛选数据
       let name = me.screenData.name ? me.screenData.name.trim() : "";
       let code = me.screenData.code ? me.screenData.code.trim() : "";
       let status = me.screenData.status ? me.screenData.status : "";
       let sortOrder = me.screenData.sortOrder ? me.screenData.sortOrder : "";
 
-      console.error(
-        "拿到的数据：",
-        name,
-        code,
-        status,
-        startTime,
-        endTime,
-        sortOrder
-      );
-
-      // 请求数据.....
-    },
-
-    //获取表格数据
-    getTableData() {
-      this.tableData = [
-        {
-          direction: "申报方向",
-          directCode: "申报编码",
-          project: "所属项目",
-          name: "流程名称",
-          edition: "1", // 流程版本
-
-          roleStatus: 2, // 授权状态
-          sendStatus: 2, // 发布状态
-
-          create_time: new Date().getTime()
-        },
-        {
-          direction: "申报方向",
-          directCode: "申报编码",
-          project: "所属项目",
-          name: "流程名称",
-          edition: "2", // 流程版本
-
-          roleStatus: 1, // 授权状态
-          sendStatus: 1, // 发布状态
-
-          create_time: new Date().getTime()
+      post1(me, getDeclareList, {
+        limit: me.pagesize,
+        page: me.page,
+        likeALL_flow_Name: name,
+        "gtString_ffd.create_time": startTime,
+        "ltString_ffd.create_time": endTime
+      }).then(res => {
+        console.log("申报流程得到的数据：", res);
+        if (res && res.code == 1) {
+          const { data, totalCount } = res;
+          me.tableData = data;
+          me.total = totalCount;
         }
-      ];
+      });
     },
 
     // 重置查询要求

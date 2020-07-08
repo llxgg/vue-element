@@ -4,7 +4,7 @@ import Router from 'vue-router';
 // 处理路由重复访问报的错
 const originRouter = Router.prototype.push
 Router.prototype.push = function push(location) {
-    return originRouter.call(this,location).catch(err => err)
+    return originRouter.call(this, location).catch(err => err)
 }
 
 Vue.use(Router);
@@ -82,32 +82,37 @@ const router = new Router({
                     component: resolve => require(['../components/page/FlowAudit.vue'], resolve),
                     mate: { title: '流程审核' }
                 },
-                
+
                 // 流程管理
                 {
                     path: '/flowdefine',
                     component: resolve => require(['../components/page/Flowdefine.vue'], resolve),
-                    mate: { title: '流程定义' },
+                    meta: { title: '流程定义' },
                 },
                 {
-                    path:'/add_flow',
-                    component: resolve => require(['../components/page/Flow_add.vue'],resolve),
-                    mate:{title: "新增流程" },
+                    path: '/add_flow',
+                    component: resolve => require(['../components/page/Flow_add.vue'], resolve),
+                    meta: { title: "新增流程", parentPath: 'flowdefine' },
+                },
+                {
+                    path: '/flow_history',
+                    component: resolve => require(['../components/page/flow/flow_history.vue'], resolve),
+                    meta: { title: "历史流程", parentPath: 'flowdefine' },
                 },
                 {
                     path: '/flowauth',
                     component: resolve => require(['../components/page/Flowauth.vue'], resolve),
-                    mate: { title: '流程授权' }
+                    meta: { title: '流程授权' }
                 },
                 {
                     path: '/bind_flow',
                     component: resolve => require(['../components/page/Flow_bind.vue'], resolve),
-                    mate: { title: '流程绑定' }
+                    meta: { title: '流程绑定', parentPath: 'flowauth' }
                 },
                 {
                     path: '/instanquery',
                     component: resolve => require(['../components/page/Instanquery.vue'], resolve),
-                    mate: { title: '实例查询' }
+                    meta: { title: '实例查询' }
                 },
 
 

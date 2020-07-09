@@ -87,17 +87,22 @@ const router = new Router({
                 {
                     path: '/flowdefine',
                     component: resolve => require(['../components/page/Flowdefine.vue'], resolve),
-                    meta: { title: '流程定义' },
+                    meta: { title: '流程定义配置' },
                 },
                 {
                     path: '/add_flow',
                     component: resolve => require(['../components/page/Flow_add.vue'], resolve),
-                    meta: { title: "新增流程", parentPath: 'flowdefine' },
+                    meta: { title: "新增流程"},
                 },
                 {
                     path: '/flow_history',
                     component: resolve => require(['../components/page/flow/flow_history.vue'], resolve),
-                    meta: { title: "历史流程", parentPath: 'flowdefine' },
+                    meta: { title: "历史流程"},
+                },
+                {
+                    path: '/flowdeclare',
+                    component: resolve => require(['../components/page/flowdeclare.vue'], resolve),
+                    meta: { title: "申报流程配置" },
                 },
                 {
                     path: '/flowauth',
@@ -112,7 +117,7 @@ const router = new Router({
                 {
                     path: '/instanquery',
                     component: resolve => require(['../components/page/Instanquery.vue'], resolve),
-                    meta: { title: '实例查询' }
+                    meta: { title: '流程实例' }
                 },
 
 

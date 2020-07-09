@@ -94,7 +94,11 @@ export default {
           subs: [
             {
               index: "flowdefine",
-              title: "流程定义"
+              title: "流程定义配置"
+            },
+              {
+              index: "flowdeclare",
+              title: "申报流程配置"
             },
             {
               index: "flowauth",
@@ -102,7 +106,7 @@ export default {
             },
             {
               index: "instanquery",
-              title: "实例查询"
+              title: "流程实例"
             }
           ]
         },

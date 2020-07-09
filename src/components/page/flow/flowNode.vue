@@ -27,6 +27,9 @@
             node: Object,
             isconnect: Boolean,
         },
+        created(){
+            console.log('wwwwwwwwwwwwwwww',this.node);
+        },
         data() {
             return {
                 mouseEnter: false

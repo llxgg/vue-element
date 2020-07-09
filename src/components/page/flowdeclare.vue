@@ -11,7 +11,7 @@
 
        <el-breadcrumb separator-class="el-icon-arrow-right" separator=">">
         <el-breadcrumb-item>流程配置</el-breadcrumb-item>
-        <el-breadcrumb-item>流程授权</el-breadcrumb-item>
+        <el-breadcrumb-item>申报流程配置</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
 

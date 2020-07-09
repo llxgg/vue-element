@@ -65,7 +65,7 @@
       <div class="flow-edit">
         <div class="flow-edit-content">
           <edit-flow ref="flowEdit" v-show="editType=='flow'"></edit-flow>
-          <edit-node ref="nodeForm" v-show="editType=='node'"></edit-node>
+          <edit-node ref="nodeForm" v-show="editType=='node'" @getSon="getSonData"></edit-node>
           <edit-line ref="lineForm" v-show="editType=='line'" @line-save="lineLabelSave"></edit-line>
         </div>
       </div>
@@ -90,10 +90,15 @@ import flowNode from "./flow/flowNode.vue";
 import editFlow from "./flow/editFlow.vue";
 import editNode from "./flow/editNode.vue";
 import editLine from "./flow/editLine.vue";
+
+import { post, post1 } from "../../util/http.js";
+import { saveFlow } from "../../util/api.js";
+
 export default {
   name: "Addflow",
   data() {
     return {
+      nodeInfo: null,
       flowName: "", // 流程名称
       menueList: [
         {
@@ -144,7 +149,7 @@ export default {
           [
             "Label",
             {
-              label: "连线文本",
+              label: "",
               id: "label-1",
               cssClass: "csslabel"
             }
@@ -218,7 +223,8 @@ export default {
           Remark: ""
         },
         nodeList: [],
-        lineList: []
+        lineList: [],
+        lastNodeList: []
       },
       currentItem: "", //临时存添加的元素
       isConnect: false, //判断是否连接
@@ -234,7 +240,9 @@ export default {
     editNode,
     editLine
   },
-  created() {},
+  created() {
+    // 获取传递进来的id
+  },
   mounted() {
     this.jsPlumb = jsPlumb.getInstance();
     this.$nextTick(() => {
@@ -291,9 +299,11 @@ export default {
             _this.data.lineList.push({
               from: from,
               to: to,
-              label: "连线名称",
+              label: "",
               id: _this.getUUID(),
-              Remark: ""
+              Remark: "", // 备注
+              toCode: "", // 编码
+              toBtn: "" // 按钮名称
             });
           }
           setTimeout(function() {
@@ -396,7 +406,8 @@ export default {
     },
     // 添加新的节点
     addNode(temp) {
-      console.log("添加节点", temp);
+      console.warn("添加节点", temp);
+
       this.data.nodeList.push(temp);
       this.$nextTick(function() {
         this.jsPlumb.makeSource(temp.id, this.jsplumbSourceOptions);
@@ -457,7 +468,6 @@ export default {
     },
     //编辑节点
     editNode(nodeId) {
-      //console.log('编辑节点', nodeId)
       this.editType = "node";
       this.$nextTick(function() {
         this.$refs.nodeForm.init(this.data, nodeId);
@@ -508,11 +518,61 @@ export default {
       //this.$set(this.currentLine, 'label', line.label);
     },
     drag(item) {
+      console.log("aaaaaaaaaaaaaa", item);
       this.currentItem = item;
+    },
+    getSonData(data) {
+      console.error("子组件传递回来的数据：", data);
+      // this.addNode(data);
+      // this.editNode(data.nodeId);
+      // this.nodeInfo = data;
+
+      // 注意bug（多次拖拽会重复生成--先不解决）
+      // this.data.lastNodeList.forEach(item => {
+      //   console.error("当前item", item);
+      //   if (item.nodeId == data.nodeId) {
+      //     alert("操作的是同一个");
+      //   } else {
+      //   }
+
+        
+      // });
+
+      if(this.data.lastNodeList.length > 0){
+        this.data.lastNodeList.forEach(item => {
+          
+          if(data.nodeId === item.nodeId){
+            alert('操作的是同一个');
+          }else {
+            alert('操作的不是同一个');
+            console.warn('xxxxxx',item)
+          }
+        })
+      }else {
+
+        this.data.lastNodeList.push(data);
+      }
     },
     drop(event) {
       //event.preventDefault();
       var _obj = this.$refs.flowContent;
+
+      // console.log("vvvvvvvvvvvvvvvvvv", this.$refs);
+      // console.log("vvvvvvvvvvvvvvvvvv", this.$refs.nodeForm);
+      // console.log("nnnnnnnnnnnnnnnnnnnnnnn", this.$refs.nodeForm.$children[0]);
+      // console.log(
+      //   "vvvvvvvvvvvvvvvvvv",
+      //   this.$refs.nodeForm.$children[0].$options
+      // );
+      // 节点的数据
+      // let nodeInfo = this.$refs.nodeForm;
+      // // let CurrentNodeData = this.$refs.nodeForm.$children[0].$options.propsData.model;
+      // console.log(
+      //   "最终----------vvvvvvvvvvvvvvvvvv",
+      //   // JSON.stringify(this.$refs.nodeForm.$children[0].$options.propsData)
+      //   nodeInfo
+      // );
+
       var temp = {
         id: this.getUUID(),
         label: this.currentItem.name,
@@ -520,6 +580,7 @@ export default {
         left: event.offsetX + "px",
         Type: this.currentItem.type
       };
+
       this.addNode(temp);
       this.editNode(temp.id);
     },
@@ -538,12 +599,15 @@ export default {
       var uuid = s.join("");
       return uuid;
     },
+
     // 保存
     saveFlow() {
+      let me = this;
       //console.log(this.jsPlumb)
       //console.log(this.jsPlumb.Defaults)
       //console.log('线', this.jsPlumb.getConnections())
-      console.log(this.data);
+      return console.log("=========当前流程图的数据===========：", this.data);
+
       // 判断是否输入了流程名称
       if (!this.flowName) {
         this.$alert("请输入流程名称", "温馨提示", {
@@ -551,9 +615,33 @@ export default {
           callback: action => {}
         });
       } else {
-        // 请求接口：
+        // 处理数据：(vuex)
+        console.log("xxxxxxxx", this.data);
+
+        let flowObj = {
+          flowId: "",
+          flowVersion: "",
+          flowName: this.flowName,
+          flowCode: "ddd",
+          deptIds: "",
+          status: "2", // 暂存 or 提交
+          // 节点
+          nodes: this.data.lastNodeList,
+
+          //节点对应的数据
+          trans: this.data.lineList
+        };
+
+        post(me, saveFlow, flowObj)
+          .then(res => {
+            console.log("保存流程图的数据：", res);
+          })
+          .catch(err => {
+            console.log("保存流程图错误调试：", err);
+          });
       }
     },
+
     // 暂存
     temporaryFlow() {},
     editFlow() {
@@ -562,6 +650,7 @@ export default {
         this.$refs.flowEdit.init(this.data.flowInfo);
       });
     },
+
     // ---------------------------------流程图方法结束---------------------------------------
     //刷新
     refresh() {

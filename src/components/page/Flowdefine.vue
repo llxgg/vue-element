@@ -7,39 +7,39 @@
         <el-breadcrumb-item>
           <i class="el-icon-lx-calendar"></i> 流程配置 / 流程定义
         </el-breadcrumb-item>
-      </el-breadcrumb> -->
+      </el-breadcrumb>-->
 
       <el-breadcrumb separator-class="el-icon-arrow-right" separator=">">
         <el-breadcrumb-item>流程配置</el-breadcrumb-item>
-        <el-breadcrumb-item>流程定义</el-breadcrumb-item>
+        <el-breadcrumb-item>流程定义配置</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
 
     <!-- card -->
     <div class="container">
-      <div style="margin-bottom: 3px;">流程定义</div>
+      <div style="margin-bottom: 3px;font-weight:530;">流程定义</div>
       <!-- 条件筛选 -->
       <div class="table-wrapper">
         <el-input
           v-model="screenData.name"
-          placeholder="流程名称"
+          placeholder="请输入流程名称"
           style="width: 200px;"
           clearable
           @clear="clearFlowName"
         ></el-input>
         <el-input
           v-model="screenData.code"
-          placeholder="流程编码"
+          placeholder="请输入流程编码"
           style="width: 200px; margin-left:10px;"
           clearable
           @clear="clearFlowCode"
         ></el-input>
 
-        <!-- 流程状态 -->
+        <!-- 发布状态 -->
         <el-select
           v-model="screenData.status"
           style="width: 120px;margin-left: 10px;"
-          placeholder="流程状态"
+          placeholder="发布状态"
         >
           <el-option
             v-for="item in flowStatus"
@@ -71,20 +71,25 @@
         <!--  -->
         <div class="screen-btn">
           <el-button type="primary" style="width: 80px;" @click="getTableData">查询结果</el-button>
-          <el-button style="width: 80px;margin-left: 10px;" @click="resetQuery">重置</el-button>
+          <el-button style="width: 80px;margin-left: 10px;color:#409EFF;" @click="resetQuery">重置</el-button>
         </div>
       </div>
 
       <!-- 新增/排序 -->
       <div class="table-wrapper">
-        <el-button type="primary" style="width: 80px;" @click="addFlow">新增流程</el-button>
+        <el-button type="primary" style="width: 100px;" @click="addFlow">新增流程定义</el-button>
 
-        <div class="screen-btn">
-          <!-- <el-button
+        <!-- <div class="screen-btn">
+          <el-button
             type="primary"
             style="width: 80px;margin-right:20px;"
             @click="getHistoryFlow"
-          >历史版本</el-button> -->
+        >历史版本</el-button>-->
+        <div class="screen-btn">
+          <el-button
+            style="width: 80px;margin-right:20px;color:#409EFF;"
+            @click="deleteAllFlow"
+          >批量删除</el-button>
 
           <el-select v-model="screenData.sortOrder" placeholder="排序方式" style="width: 120px;">
             <el-option
@@ -101,7 +106,7 @@
       <div style="margin-top: 8px;">
         <el-table
           :data="tableData"
-          min-height="250"
+          height="272"
           border
           style="width: 100%"
           :header-cell-style="setHeaderStyle"
@@ -109,21 +114,21 @@
           @select="handleSelectFlow"
           @select-all="handleSelectFlowAll"
         >
-          <el-table-column type="selection" width="55" :show-overflow-tooltip="true"></el-table-column>
+          <el-table-column type="selection" width="60" :show-overflow-tooltip="true"></el-table-column>
           <el-table-column label="序号" width="60" type="index"></el-table-column>
 
-          <el-table-column prop="flowName" label="流程名称" width="150"></el-table-column>
+          <el-table-column prop="flowName" label="流程名称" width="180"></el-table-column>
           <el-table-column prop="flowCode" label="流程编码" width="150"></el-table-column>
 
-          <el-table-column prop="flowVersion" label="最新版本" width="100"></el-table-column>
+          <el-table-column prop="flowVersion" label="流程版本" width="100"></el-table-column>
 
-          <el-table-column prop="status" label="当前状态" width="100">
+          <el-table-column prop="status" label="流程状态" width="100">
             <template slot-scope="scope">
-              <span>{{scope.row.status == 2 ? flowStatus[1].label : flowStatus[0].label}}</span>
+              <span>{{queryFlowStatus(scope.row.status)}}</span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="instanceCount" label="当前运行实例数" width="120"></el-table-column>
+          <!-- <el-table-column prop="instanceCount" label="当前运行实例数" width="120"></el-table-column> -->
 
           <el-table-column prop="createTime" label="创建时间">
             <!-- <template slot-scope="scope">
@@ -158,10 +163,17 @@
         ></el-pagination>
 
         <!-- 删除提示 -->
-        <el-dialog title="提示" :visible.sync="showDelete" :modal="true" width="400px">
+        <el-dialog
+          title="提示"
+          style="text-align:center;"
+          :visible.sync="showDelete"
+          :modal="true"
+          width="400px"
+          id="dialog_footer"
+        >
           <span>删除后无法恢复，您是否确定删除当前流程？</span>
           <span slot="footer" class="dialog-footer">
-            <el-button @click="showDelete = false">取 消</el-button>
+            <el-button @click="showDelete = false" style="margin-right:16px;">取 消</el-button>
             <el-button type="primary" @click="deleteFlowSelect">确 定</el-button>
           </span>
         </el-dialog>
@@ -172,7 +184,7 @@
 
 <script>
 import { timestamp, timestampYMD } from "../../util/date.js";
-import { post1 } from "../../util/http.js";
+import { post, post1 } from "../../util/http.js";
 import { getFlowData, deleteFlow, queryIdFlowNode } from "../../util/api.js";
 
 export default {
@@ -193,33 +205,26 @@ export default {
       removeFlowId: "", // 要删除那个节点
 
       flowStatus: [
-        // 流程状态
+        // 发布状态
+        {
+          value: 0,
+          label: "停用"
+        },
         {
           value: 1,
-          label: "暂存"
+          label: "冻结"
         },
         {
           value: 2,
-          label: "已提交"
+          label: "正常"
         }
       ],
 
+      //  排序方式
       sortRanks: [
         {
-          value: "name",
-          label: "流程名称"
-        },
-        {
-          value: "code",
-          label: "流程编号"
-        },
-        {
-          value: "status",
-          label: "流程状态"
-        },
-        {
-          value: "create_time",
-          label: "创建时间"
+          value: "asc",
+          label: "时间排序"
         }
       ],
 
@@ -261,6 +266,23 @@ export default {
       console.log("格式化table中的日期", value, format);
       return timestamp(value, format);
     },
+    // 处理表格中的流程状态的回显
+    queryFlowStatus(status) {
+      console.log('流程状态：',status);
+
+      switch (status) {
+        // case "0":
+        //   return "停用";
+        // case "1":
+        //   return "冻结";
+        // case "2":
+        //   return "正常";
+        case "1":
+          return "暂存";
+        case "2":
+          return "已提交";
+      }
+    },
     // 删除输入的内容
     clearFlowName() {
       this.screenData.name = "";
@@ -269,12 +291,14 @@ export default {
     },
     clearFlowCode() {
       this.screenData.code = "";
+      // 从新请求
+      this.getTableData();
     },
 
     // 分页
     handleSizeChange(val) {
       console.log(`每页 ${val} 条`);
-      this.pageSize = val;
+      this.pagesize = val;
       this.getTableData();
     },
     handleCurrentChange(val) {
@@ -292,10 +316,10 @@ export default {
     getTableData() {
       let me = this;
       let startTime = me.screenData.startDate
-        ? timestampYMD(me.screenData.startDate) + " 00:00:00"
+        ? timestampYMD(me.screenData.startDate)
         : "";
       let endTime = me.screenData.endDate
-        ? timestampYMD(me.screenData.endDate) + " 23:59:59"
+        ? timestampYMD(me.screenData.endDate)
         : "";
       // 防止用户只选一个
       if ((startTime && !endTime) || (!startTime && endTime)) {
@@ -309,8 +333,8 @@ export default {
       // 获取其他筛选数据
       let name = me.screenData.name ? me.screenData.name.trim() : "";
       let code = me.screenData.code ? me.screenData.code.trim() : "";
-      let status = me.screenData.status ? me.screenData.status : "";
-      let sortOrder = me.screenData.sortOrder ? me.screenData.sortOrder : "";
+      // let status = me.screenData.status ? me.screenData.status : ""; // 发布状态
+      let sortOrder = me.screenData.sortOrder ? me.screenData.sortOrder : ""; // 筛选
 
       // console.error(
       //   "拿到的数据：",
@@ -325,13 +349,13 @@ export default {
 
       // 请求数据....
       post1(me, getFlowData, {
-        limit: me.pagesize,
-        page: me.pagenum,
-        likeALL_FLOW_CODE: code,
-        likeALL_FLOW_NAME: name,
-        loadList: false,
-        forSel: "",
-        layTableCheckbox: "on"
+        flowName: name,
+        flowCode: code,
+        startTime: startTime,
+        endTime: endTime,
+        orderType: sortOrder,
+        limit: this.pagesize,
+        start: this.pagenum
       })
         .then(res => {
           console.log("得到的数据：", res);
@@ -361,19 +385,33 @@ export default {
       me.getTableData();
     },
 
+    // 批量删除
+    deleteAllFlow() {
+      alert("批量删除");
+    },
+
     // 表格事件
+    // 查看
     handleSee(scope) {
       console.log("查看那个流程的数据：", scope);
       if (scope) {
         const flowId = scope.flowId;
         this.$router.push({
           path: "/add_flow",
-          query: { flowId: flowId, parentPath: "flowdefine" }
+          query: { flowId: flowId, flag: 1 }
         });
       }
     },
-    handleEdit() {
-      alert("编辑当前流程");
+    // 编辑
+    handleEdit(scope) {
+      // alert("编辑当前流程");
+      if (scope) {
+        const flowId = scope.flowId;
+        this.$router.push({
+          path: "/add_flow",
+          query: { flowId: flowId, flag: 1 }
+        });
+      }
     },
     handleRemove(scope) {
       // console.log('要删除的节点：',scope);
@@ -411,7 +449,7 @@ export default {
     addFlow() {
       this.$router.push({
         path: "/add_flow",
-        query: { parentPath: "flowdefine" }
+        query: { flag: 1 } // 1 为流程定义
       });
     },
 
@@ -426,7 +464,7 @@ export default {
     handleSelectFlowAll(selection) {
       console.log("全选", selection);
     },
-    
+
     // 历史版本
     getHistoryFlow() {
       console.log("历史版本：", this.historyFlowCode);
@@ -448,7 +486,7 @@ export default {
     "screenData.sortOrder": function(newVal, oldVal) {
       console.log("排序方式是否发生了变化：", newVal, oldVal);
       // 请求
-      // this.getTableData();
+      this.getTableData();
     }
   },
 
@@ -470,5 +508,9 @@ export default {
 .screen-btn {
   position: absolute;
   right: 0;
+}
+
+#dialog_footer >>> .el-dialog__footer {
+  text-align: center !important;
 }
 </style>

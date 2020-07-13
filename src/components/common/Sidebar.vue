@@ -223,14 +223,21 @@ export default {
 
   computed: {
     onRoutes() {
-      console.log("左侧菜单栏那个高亮：", this.$route.path);
-      var reg = RegExp(/_/);
-      console.log("是否是子目录：", reg.test(this.$route.path));
+      console.log("左侧菜单栏那个高亮：", this.$route.path, this.$route.query);
+      // var reg = RegExp(/_/);
+      // console.log("是否是子目录：", reg.test(this.$route.path));
 
-      if (this.$route.path == "/add_flow") {
+      // 1 为流程定义配置， 2 为申报流程配置， 3 为流程实例
+      if (this.$route.path == "/add_flow" && this.$route.query.flag == 1) { // 流程图对应的菜单栏高亮
         return "flowdefine";
-      } else if (this.$route.path == "/bind_flow") {
+      }else if (this.$route.path == "/add_flow" && this.$route.query.flag == 2) {
         return "flowauth";
+      } else if (this.$route.path == "/add_flow" && this.$route.query.flag == 3) {
+        return "instanquery";
+      } else if (this.$route.path == "/bind_flow") { // 申报流程配置高亮
+        return "flowdeclare";
+      }else if(this.$route.path == '/process_info'){ // 流程实例高亮
+        return "instanquery";
       } else {
         return this.$route.path.replace("/", "");
       }

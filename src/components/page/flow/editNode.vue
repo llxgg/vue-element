@@ -66,7 +66,7 @@ export default {
   },
   methods: {
     init(data, id) {
-      console.log("什么来的：", data, id);
+      console.error("什么来的：", data, id);
 
       // 查找当前是第几个节点：
       let index = data.nodeList.findIndex(item => item.id == id);

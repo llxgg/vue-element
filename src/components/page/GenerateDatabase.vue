@@ -27,9 +27,12 @@
                     <el-input placeholder="（选填）" v-model="form.othername" style="width: 350px;" :disabled="fieldDis"></el-input>
                 </el-form-item>
             </el-form>
-
-            <el-button type="primary" @click='handleAdd'><i class="el-icon-circle-plus-outline"></i> 新增行</el-button>
-
+            <div class="table-wrapper">
+              <el-button type="primary" @click='handleAdd'><i class="el-icon-circle-plus-outline"></i> 新增行</el-button>
+              <div class="table-fun">
+                <el-button type="danger" style="width: 80px;" @click='isDelete'>批量删除</el-button>
+              </div>
+            </div>
             <div style="margin-top: 10px;">
 
                 <!-- 表单 -->
@@ -37,56 +40,100 @@
                     ref="singleTable"
                     :data="tableData"
                     highlight-current-row
-                    @current-change="handleSelectionChange"
+                    @current-change="handleCurrentSelectionChange"
+                    @selection-change="handleSelectionChange"
                     style="width: 100%">
                     <el-table-column
+                    type="selection"
+                    width="45">
+                    </el-table-column>
+                    <el-table-column
                     type="index"
-                    width="50">
+                    width="40">
                     </el-table-column>
                     <el-table-column
                     property="chineseName"
                     label="中文名称"
                     width="100">
+                      <template slot-scope="scope">
+                        <span v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))">{{scope.row.chineseName}}</span>
+                        <el-input v-else v-model="multipleSelection.chineseName" style="width: 70px;" :disabled="fieldDis" class="tableInput" @blur='changeChineseName'></el-input>
+                      </template>
                     </el-table-column>
                     <el-table-column
                     property="fieldName"
                     label="字段名称"
-                    width="70">
+                    width="80"
+                    >
+                      <template slot-scope="scope">
+                        <span v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))">{{scope.row.fieldName}}</span>
+                        <el-input v-else v-model="multipleSelection.fieldName" style="width: 70px;" :disabled="fieldDis" class="tableInput" @blur='changeFieldName'></el-input>
+                      </template>
                     </el-table-column>
                     <el-table-column
                     property="controlType"
-                    width="70"
+                    width="100"
                     label="控件类型">
                         <template slot-scope="scope">
-                            <span>{{controlTypes[scope.row.controlType]}}</span>
-                            <!-- <span>{{scope.row.controlType}}</span> -->
+                            <span v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))">{{controlTypes[scope.row.controlType]}}</span>
+                            <el-select v-else placeholder="" v-model="multipleSelection.controlType" style="width: 90px;" :disabled="fieldDis" @change='changeControlType'>
+                              <el-option 
+                                v-for="(i,k) in controlTypes"
+                                :key="k"
+                                :label="i"
+                                :value="k"
+                              ></el-option>
+                            </el-select>
                         </template>
                     </el-table-column>
                     <el-table-column
                     property="dataType"
                     label="数据类型"
-                    width="70">
+                    width="100">
                         <template slot-scope="scope">
-                            <span>{{dataTypes[scope.row.dataType]}}</span>
-                            <!-- <span>{{scope.row.controlType}}</span> -->
+                            <span v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))">{{dataTypes[scope.row.dataType]}}</span>
+                            <el-select v-else placeholder="" v-model="multipleSelection.dataType" style="width: 90px;" :disabled="fieldDis" @change='changeDataType'>
+                              <el-option 
+                                v-for="(i,k) in dataTypes"
+                                :key="k"
+                                :label="i"
+                                :value="k"
+                              ></el-option>
+                            </el-select>
                         </template>
                     </el-table-column>
                     <el-table-column
                     property="dataLength"
                     label="数据长度"
                     width="70">
+                      <template slot-scope="scope">
+                        <span v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))">{{scope.row.dataLength}}</span>
+                        <el-input v-else v-model="multipleSelection.dataLength" style="width: 50px;" :disabled="fieldDis" class="tableInput" @blur="changeDatalength"></el-input>
+                      </template>
                     </el-table-column>
                     <el-table-column
                     property="dataAccuracy"
                     label="精度"
                     width="60">
+                      <template slot-scope="scope">
+                        <span v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))">{{scope.row.dataAccuracy}}</span>
+                        <el-input v-else v-model="multipleSelection.dataAccuracy" style="width: 50px;" :disabled="fieldDis" class="tableInput" @blur="changeDataAccuracy"></el-input>
+                      </template>
                     </el-table-column>
                     <el-table-column
                     property="verifyType"
                     label="校验规则"
                     width="100">
                         <template slot-scope="scope">
-                          <span>{{verifyTypes[scope.row.verifyType]}}</span>
+                          <span v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))">{{verifyTypes[scope.row.verifyType]}}</span>
+                          <el-select v-else placeholder="" v-model="multipleSelection.verifyType" style="width: 90px;" :disabled="fieldDis" @change='changeVerifyType'>
+                            <el-option 
+                              v-for="(i,k) in verifyTypes"
+                              :key="k"
+                              :label="i"
+                              :value="k"
+                            ></el-option>
+                          </el-select>
                         </template>
                     </el-table-column>
                     <el-table-column
@@ -95,36 +142,42 @@
                     width="70">
                         <template slot-scope="scope">
                             <!-- <span>{{scope.row.required}}</span> -->
-                            <el-switch :value="scope.row.required" disabled></el-switch>
+                            <el-switch :value="scope.row.required" disabled v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))"></el-switch>
+                            <el-switch v-model="multipleSelection.required" :disabled="fieldDis" v-else @change='changeRequired'></el-switch>
                         </template>
                     </el-table-column>
                     <el-table-column
-                    label="显示在数据页面"
-                    width="110">
+                    label="是否显示"
+                    width="70">
                         <template slot-scope="scope">
                             <!-- <span>{{scope.row.display}}</span> -->
-                            <el-switch :value="scope.row.display" disabled></el-switch>
+                            <el-switch  :value="scope.row.display" disabled v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))"></el-switch>
+                            <el-switch v-model="multipleSelection.display" :disabled="fieldDis" v-else @change='changeDisPlay'></el-switch>
                         </template>
                     </el-table-column>
                     <el-table-column
                     property="dataExample"
                     label="样例数据"
                     width="70">
+                      <template slot-scope="scope">
+                        <span v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))">{{scope.row.dataExample}}</span>
+                        <el-input v-else v-model="multipleSelection.dataExample" style="width: 50px;" :disabled="fieldDis" class="tableInput" @blur="changeDataExample"></el-input>
+                      </template>
                     </el-table-column>
                     <el-table-column
                     property="position"
                     label="所在位置"
                     width="70">
+                      <template slot-scope="scope">
+                        <span v-if="multipleSelection == null || (multipleSelection.id && (multipleSelection.id != scope.row.id))">{{scope.row.position}}</span>
+                        <el-input v-else v-model="multipleSelection.position" style="width: 50px;" :disabled="fieldDis" class="tableInput" @blur="changePosition"></el-input>
+                      </template>
                     </el-table-column>
-                    <el-table-column label="操作" align='right' width="150" v-if="from == 'see'? false:true">
+                    <el-table-column label="操作" align='right' width="80" v-if="from == 'see'? false:true">
                             <template slot-scope="scope">
                                 <el-button
                                 size="mini"
                                 @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-                                <el-button
-                                size="mini"
-                                type="danger"
-                                @click="handleDelete(scope.$index, scope.row)">删除</el-button>
                             </template>
                         </el-table-column>
                 </el-table>
@@ -214,7 +267,7 @@
                               <el-form-item label="值" label-width="50px">
                                 <el-input v-model="i.value" placeholder="请输入参数值" style="width: 150px;"></el-input>
                               </el-form-item>
-                              <i class="el-icon-circle-close" style="margin-left: 10px;font-size: 15px;" v-show="k > 0 && fieldDis == false" @click="deleteMx(k)"></i>
+                              <i class="el-icon-circle-close" style="margin-left: 10px;font-size: 15px;" v-show='fieldDis == false' @click="deleteMx(k)"></i>
                             </div>
                           </div>
                         </div>
@@ -236,7 +289,37 @@
                     <span>删除后无法恢复，您是否确定删除当前行列表？</span>
                     <span slot="footer" class="dialog-footer">
                         <el-button @click="showColumnDelete = false">取 消</el-button>
-                        <el-button type="primary" @click="todeleteColumn">确 定</el-button>
+                        <el-button type="primary" @click="moreDelete">确 定</el-button>
+                    </span>
+                </el-dialog>
+
+                <el-dialog
+                title='添加模型参数'
+                :visible.sync="showMxdialog"
+                :modal="true"
+                width="600px"
+                >
+                  <el-form label-width="100px">
+                    <el-form-item label="模型参数"  :show-message='false'>
+                      <el-button @click="addMSoptions"><i class="el-icon-plus"></i>添加模型参数</el-button>
+                    </el-form-item>
+                    <div>
+                      <div v-for='(i,k) in msOptions' :key='k'>
+                        <div class="two">
+                          <el-form-item label="名称" >
+                            <el-input v-model="i.name" placeholder="请输入参数名称" style="width: 150px;" ></el-input>
+                          </el-form-item>
+                          <el-form-item label="值" label-width="50px">
+                            <el-input v-model="i.value" placeholder="请输入参数值" style="width: 150px;"></el-input>
+                          </el-form-item>
+                          <i class="el-icon-circle-close" style="margin-left: 10px;font-size: 15px;"  @click="deleteMsOptions(k)"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </el-form>
+                    <span slot="footer" class="dialog-footer">
+                        <el-button @click="showMxdialog = false">取 消</el-button>
+                        <el-button type="primary" @click="toAddMsoptions">确 定</el-button>
                     </span>
                 </el-dialog>
 
@@ -268,7 +351,8 @@ import {
   createOrModifyTable,
   saveColumn,
   updateColumn,
-  deleteColumn
+  deleteColumn,
+  batchDelete
 } from "../../util/api.js";
 
 export default {
@@ -278,7 +362,7 @@ export default {
       formNo: null, //表单number
       deleteid: "", //删除行id
       showColumnDelete: false, //删除控制
-      mxdata: [], //模型数据
+      mxdata: [], //模型参数
       fieldBehavior: "edit", //操作字段行为
       isCreate: 1, //是否已创建 1：未创建 2：已创建
       mxShow: false, //新增控件模板按钮
@@ -294,6 +378,14 @@ export default {
       state: 1, //表单当前状态
       oldcontrolType: "", //数据库记录的控件类型
       oldoptions: [], //数据库记录的模型参数
+      multipleSelection: null, //点击表格获取的数据
+      selectionClick: false,
+      temp: [], //临时数据用于对比
+      ids: [], //删除的数据
+      mids: [], //表格删除字段
+      msOptions: [], //在表格上对模型参数进行修改
+      showMxdialog: false, //模型参数模态弹框
+      msOptionsChangeInTable: true, //模型参数的修改是否成功
       //提交至哪个数据源
       form: {
         source: "",
@@ -494,7 +586,7 @@ export default {
     };
   },
   mounted() {
-    document.querySelector(".content-box>.content").scrollTo(0,0)
+    document.querySelector(".content-box>.content").scrollTo(0, 0);
     this.from = this.$route.query.from;
     this.formid = this.$route.query.id ? this.$route.query.id : "";
 
@@ -546,22 +638,44 @@ export default {
       this.showFieldDialog = true;
       var val = this.fieldform.controlType;
 
-      this.mxdata =
-        this.fieldform.options != null || this.fieldform.options != []
-          ? this.fieldform.options
-          : val == "RADIO" || val == "CHECKBOX" || val == "DROPLIST"
-            ? [{ name: "", value: "", id: "" }, { name: "", value: "", id: "" }]
-            : [];
+      this.mxdata = this.initMxdata(val);
       this.oldcontrolType = val;
       this.oldoptions =
         this.fieldform.options != null ? this.fieldform.options : [];
       console.log(this.mxdata, this.fieldform.options);
     },
+    //初始化模态数据
+    initMxdata(val) {
+      var me = this;
+      var arr = [
+        { name: "", value: "", id: "" },
+        { name: "", value: "", id: "" }
+      ];
+      if (val == "RADIO" || val == "CHECKBOX" || val == "DROPLIST") {
+        me.mxShow = true;
+        if (me.fieldform.options != null && me.fieldform.options != []) {
+          console.log(1);
+          return me.fieldform.options;
+        } else {
+          console.log(2);
+          return arr;
+        }
+      } else {
+        me.mxShow = false;
+        return [];
+      }
+    },
     //删除操作
-    handleDelete(index, row) {
-      console.log(index, row);
-      this.showColumnDelete = true;
-      this.deleteid = row.id;
+    isDelete() {
+      var me = this
+      if(me.ids.length == 0) {
+        me.$message({
+          type: 'warning',
+          message: "请先勾选要删除的数据"
+        })
+      }else{
+        this.showColumnDelete = true;
+      }
     },
     //更改页面
     handleCurrentChange(val) {
@@ -570,8 +684,22 @@ export default {
       this.getFieldList();
     },
     //选中数据
-    handleSelectionChange(val) {
+    handleCurrentSelectionChange(val) {
+      console.log(val);
       this.multipleSelection = val;
+      this.selectionClick = true;
+      this.temp = JSON.parse(JSON.stringify(val)); //临时数据，用于对比
+      this.mids = []; //初始化模态数据删除的id
+    },
+    //选择某一列
+    handleSelectionChange(val) {
+      // this.multipleSelection = val;
+      var me = this;
+      var arr = [];
+      for (var i = 0; i < val.length; i++) {
+        arr.push(val[i].id);
+      }
+      me.ids = arr;
     },
     //返回上一步
     prev() {
@@ -614,10 +742,10 @@ export default {
       });
     },
     //用于判断
-    jadgeIsInput() {
+    jadgeIsInput(data) {
       var me = this;
       // return value == false ? false : true;
-      var data = me.mxdata;
+      // var data = me.mxdata;
       var res = true;
       for (let i = 0; i < data.length; i++) {
         if (data[i].value == "" || data[i].name == "") {
@@ -653,7 +781,7 @@ export default {
             data.controlType == "CHECKBOX" ||
             data.controlType == "DROPLIST"
           ) {
-            if (!me.jadgeIsInput()) {
+            if (!me.jadgeIsInput(me.mxdata)) {
               me.$message({
                 type: "warning",
                 message: "请填写完整模型参数"
@@ -770,10 +898,10 @@ export default {
         // me.tableData = res.rows
       });
     },
-    //新增模型数据
+    //新增模型参数
     addMX() {
       var me = this;
-      var arr = me.mxdata;
+      var arr = me.mxdata || [];
       var obj = {
         name: "",
         value: "",
@@ -785,24 +913,6 @@ export default {
     //删除行
     todeleteColumn() {
       var me = this;
-      post(me, deleteColumn, {
-        id: me.deleteid
-      }).then(res => {
-        console.log(res);
-        if (res.status == 1) {
-          me.$message({
-            type: "success",
-            message: res.msg || "成功"
-          });
-          me.showColumnDelete = false;
-          me.getFieldList();
-        } else {
-          me.$message({
-            type: "error",
-            message: res.msg || "系統錯誤"
-          });
-        }
-      });
     },
     deleteMx(index) {
       console.log(index);
@@ -820,6 +930,248 @@ export default {
         return k != index;
       });
       me.mxdata = res;
+    },
+    //批量删除
+    moreDelete() {
+      var me = this;
+      console.log(me.ids);
+      post(me, batchDelete, {
+        ids: me.ids
+      }).then(res => {
+        if (res.status == 1) {
+          me.$message({
+            type: "success",
+            message: res.msg || "删除成功"
+          });
+        } else {
+          me.$message({
+            type: "error",
+            message: res.msg || "删除失败，请重试"
+          });
+        }
+        me.showColumnDelete = false;
+        me.getFieldList();
+      });
+    },
+    //表格上修改中文名
+    changeChineseName(e) {
+      var me = this;
+      console.log(e.target.value, me.temp.chineseName);
+      if (e.target.value != me.temp.chineseName) {
+        me.changeUpload();
+      }
+    },
+    //表格上修改字段名称
+    changeFieldName(e) {
+      var me = this;
+      console.log(e.target.value, me.temp.fieldName);
+      if (e.target.value != me.temp.fieldName) {
+        me.changeUpload();
+      }
+    },
+    //表格上修改控件类型
+    changeControlType(e) {
+      var me = this;
+      console.log(e, me.temp.controlType);
+      if (e != me.temp.controlType) {
+        if (e == "RADIO" || e == "CHECKBOX" || e == "DROPLIST") {
+          //当前选择的控件类型为单选、多选、下拉菜单
+          me.showMxdialog = true;
+          if (
+            me.temp.controlType == "RADIO" ||
+            me.temp.controlType == "CHECKBOX" ||
+            me.temp.controlType == "DROPLIST"
+          ) {
+            //原控件类型为单选多选下拉
+            if (me.temp.options == null || me.temp.options == []) {
+              //模型参数为空
+              me.msOptions = [
+                { name: "", value: "", id: "" },
+                { name: "", value: "", id: "" }
+              ]; //初始化模型参数
+            } else {
+              me.msOptions = me.temp.options;
+            }
+          } else {
+            //防止之前模态数据没有删除干净遗留的数据显示
+            if (me.temp.options instanceof Array) {
+              let datalen = me.temp.options.length;
+              let arr = [];
+              for (let i = 0; i < datalen; i++) {
+                arr.push(me.temp.options[i].id);
+              }
+              console.log(arr);
+              me.mids = arr;
+            }
+            me.msOptions = [
+              { name: "", value: "", id: "" },
+              { name: "", value: "", id: "" }
+            ]; //初始化模型参数
+          }
+        } else {
+          //如果不选择单选多选下拉的情况
+          if (me.temp.options instanceof Array) {
+            //清除之前的选项
+            console.log(me.temp.options);
+            if (me.temp.options.length > 0) {
+              let datalen = me.temp.options.length;
+              let arr = [];
+              for (let i = 0; i < datalen; i++) {
+                arr.push(me.temp.options[i].id);
+              }
+              me.mids = arr;
+            }
+          }
+          me.changeUpload();
+        }
+      }
+    },
+    //添加模型参数
+    addMSoptions() {
+      var me = this;
+      console.log(me.msOptions);
+      let arr = me.msOptions;
+      let obj = { name: "", value: "", id: "" };
+      arr.push(obj);
+      me.msOptions = arr;
+    },
+    //确认添加模型参数
+    toAddMsoptions() {
+      var me = this;
+      if (!me.jadgeIsInput(me.msOptions)) {
+        me.$message({
+          type: "warning",
+          message: "请填写完整模型参数"
+        });
+        return;
+      } else {
+        me.changeUpload();
+      }
+    },
+    deleteMsOptions(index) {
+      console.log(index);
+      var me = this;
+      var arr = me.msOptions;
+      console.log(arr);
+      var optionIds = me.mids;
+      if (arr[index].id) {
+        // post(me,)
+        console.log(arr[index].id);
+        optionIds.push(arr[index].id);
+      }
+      me.mids = optionIds;
+      var res = arr.filter((i, k) => {
+        return k != index;
+      });
+      me.msOptions = res;
+    },
+    //表格上修改数据类型
+    changeDataType(e) {
+      var me = this;
+      console.log(e, me.temp.dataType);
+      if (e != me.temp.dataType) {
+        me.changeUpload();
+      }
+    },
+    //表格上修改数据长度
+    changeDatalength(e) {
+      var me = this;
+      console.log(e.target.value, me.temp.dataLength);
+      if (e.target.value != me.temp.dataLength) {
+        me.changeUpload();
+      }
+    },
+    //表格上修改精度
+    changeDataAccuracy(e) {
+      var me = this;
+      console.log(e.target.value, me.temp.dataAccuracy);
+      if (e.target.value != me.temp.dataAccuracy) {
+        me.changeUpload();
+      }
+    },
+    //表格上修改校验规则
+    changeVerifyType(e) {
+      var me = this;
+      if (
+        (me.temp.verifyType == null && e != null) ||
+        (me.temp.verifyType != null && me.temp.verifyType != e)
+      ) {
+        me.changeUpload();
+      }
+    },
+    //表格上修改是否必填
+    changeRequired(e) {
+      var me = this;
+      console.log(e, me.temp.required);
+      if (e != me.temp.required) {
+        me.changeUpload();
+      }
+    },
+    //表格上修改是否显示
+    changeDisPlay(e) {
+      var me = this;
+      console.log(e, me.temp.disPlay);
+      if (e != me.temp.disPlay) {
+        me.changeUpload();
+      }
+    },
+    //表格上修改样例数据
+    changeDataExample(e) {
+      var me = this;
+      console.log(e.target.value, me.temp.dataExample);
+      if (
+        (me.temp.dataExample == null && e.target.value != null) ||
+        (me.temp.dataExample != null && me.temp.dataExample != e.target.value)
+      ) {
+        me.changeUpload();
+      }
+    },
+    //表格上修改所在位置
+    changePosition(e) {
+      var me = this;
+      console.log(e.target.value, me.temp.position);
+      if (e.target.value != me.temp.position) {
+        me.changeUpload();
+      }
+    },
+    //在表格上修改数据的请求
+    changeUpload() {
+      let me = this;
+      let data = {
+        id: me.multipleSelection.id,
+        chineseName: me.multipleSelection.chineseName,
+        fieldName: me.multipleSelection.fieldName,
+        controlType: me.multipleSelection.controlType,
+        dataType: me.multipleSelection.dataType,
+        dataLength: me.multipleSelection.dataLength,
+        dataAccuracy: me.multipleSelection.dataAccuracy,
+        verifyType: me.multipleSelection.verifyType,
+        required: me.multipleSelection.required,
+        display: me.multipleSelection.display,
+        dataExample: me.multipleSelection.dataExample,
+        position: me.multipleSelection.position,
+        options: me.msOptions,
+        optionIds: me.mids
+      };
+      post(me, updateColumn, {
+        formId: me.formid,
+        ...data
+      }).then(res => {
+        me.selectionClick = false;
+        if (res.status == 1) {
+          me.$message({
+            type: "success",
+            message: res.msg || "修改成功"
+          });
+          me.getFieldList();
+          me.showMxdialog = false;
+        } else {
+          me.$message({
+            type: "error",
+            message: res.msg || "系统错误"
+          });
+        }
+      });
     }
   },
   watch: {
@@ -846,15 +1198,13 @@ export default {
         //且原数据的控件类型也为单选、多选、下拉框
         if (old == "RADIO" || old == "CHECKBOX" || old == "DROPLIST") {
           me.mxdata = me.oldoptions;
-        } else {//原数据的控件类型不为单选、多选、下拉框
-          me.mxdata =
-            // me.fieldform.options.length > 0
-            //   ? me.fieldform.options
-            //   :
-                [
-                  { name: "", value: "", id: "" },
-                  { name: "", value: "", id: "" }
-                ];
+        } else {
+          //原数据的控件类型不为单选、多选、下拉框
+          console.log("change", 2);
+          me.mxdata = [
+            { name: "", value: "", id: "" },
+            { name: "", value: "", id: "" }
+          ];
           me.mxShow = true;
         }
       } else {
@@ -863,23 +1213,24 @@ export default {
         me.fieldform.options = [];
       }
     },
-    // "fieldform.dataType": function(val) {
-    //   var me = this
-    //   if(val) {
-    //     me.$refs["fieldform"].clearValidate();
-    //   }
-    // },
     showFieldDialog: function(val) {
       var me = this;
       if (val == false) {
-        //模态框关闭后清空所有校验、删除的模型数据、暂缓的数据库控件类型、暂缓的数据库模型参数
+        //模态框关闭后清空所有校验、删除的模型参数、暂缓的数据库控件类型、暂缓的数据库模型参数
         //以便下一个字段的修改，不会导致数据重叠、混乱
         this.$refs["fieldform"].clearValidate();
         me.optionIds = [];
-        me.oldcontrolType = '';
-        me.oldoptions = []
+        me.oldcontrolType = "";
+        me.oldoptions = [];
       }
       me.getFieldList();
+    },
+    showMxdialog: function(val) {
+      var me = this;
+      if (val === false) {
+        me.msOptions = [];
+        me.getFieldList();
+      }
     },
     "form.source": function(val) {
       if (val) {
@@ -893,5 +1244,20 @@ export default {
 .two {
   display: flex;
   flex-direction: row;
+}
+.table-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 50px;
+  position: relative;
+}
+.table-fun {
+  position: absolute;
+  right: 0px;
+}
+.tableInput > .el-input__inner {
+  border: 1px solid #fff !important;
+  padding: 0 !important;
 }
 </style>

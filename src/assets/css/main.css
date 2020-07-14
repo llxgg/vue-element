@@ -171,9 +171,3 @@ a {
 .v-note-wrapper .v-note-panel {
     min-height: 500px;
 }
-
-
-/*tble表格设置border后，解决线没对齐*/
-body .el-table th.gutter {
-    display: table-cell !important;
-}

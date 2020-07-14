@@ -67,21 +67,21 @@
         </div>
       </div>
 
-      <div style="margin-top: 8px;">
+      <div style="margin-top: 8px;" id='el__table'>
         <el-table
           :data="tableData"
-          height="350"
+          min-height="350"
           border
           style="width: 100%"
           :header-cell-style="setHeaderStyle"
           :cell-style="setRowStyle"
         >
-          <el-table-column type="selection" width="55" :show-overflow-tooltip="true"></el-table-column>
-          <el-table-column label="序号" width="60" type="index"></el-table-column>
+          <el-table-column type="selection" width="70" :show-overflow-tooltip="true"></el-table-column>
+          <el-table-column label="序号" width="70" type="index"></el-table-column>
           <el-table-column prop="code" label="受理编号" width="120"></el-table-column>
-          <el-table-column prop="declarationName" label="申报方向名称"></el-table-column>
-          <el-table-column prop="projectName" label="所属项目" width="120"></el-table-column>
-          <el-table-column prop="flowName" label="流程名称" width="120"></el-table-column>
+          <el-table-column prop="declarationName" label="申报方向名称" width='150'></el-table-column>
+          <el-table-column prop="projectName" label="所属项目" width="150"></el-table-column>
+          <el-table-column prop="flowName" label="流程名称"></el-table-column>
 
           <el-table-column prop="STATUS" label="当前状态" width="120">
             <template slot-scope="scope">
@@ -209,7 +209,8 @@ export default {
     // 流程图
     handleFlowChart(scope) {
       console.log("流程图当前数据源", scope);
-      this.$router.push({ path: "/add_flow", query: { flag: 3 } }); // 3 为流程实例
+      const flowId = scope.flowId;
+      this.$router.push({ path: "/add_flow", query: { flag: 3, flowId: flowId } }); // 3 为流程实例
     },
 
     // 过程信息
@@ -354,5 +355,9 @@ export default {
 .screen-btn {
   position: absolute;
   right: 0;
+}
+
+#el__table >>> .el-checkbox__inner {
+    margin-left: 0;
 }
 </style>

@@ -83,6 +83,7 @@ const router = new Router({
                     mate: { title: '流程审核' }
                 },
 
+         
                 // 流程管理
                 {
                     path: '/flowdefine',
@@ -94,11 +95,11 @@ const router = new Router({
                     component: resolve => require(['../components/page/Flow_add.vue'], resolve),
                     meta: { title: "新增流程"},
                 },
-                {
-                    path: '/flow_history',
-                    component: resolve => require(['../components/page/flow/flow_history.vue'], resolve),
-                    meta: { title: "历史流程"},
-                },
+                // {
+                //     path: '/flow_history',
+                //     component: resolve => require(['../components/page/flow/flow_history.vue'], resolve),
+                //     meta: { title: "历史流程"},
+                // },
                 {
                     path: '/flowdeclare',
                     component: resolve => require(['../components/page/flowdeclare.vue'], resolve),
@@ -112,12 +113,17 @@ const router = new Router({
                 {
                     path: '/bind_flow',
                     component: resolve => require(['../components/page/Flow_bind.vue'], resolve),
-                    meta: { title: '流程绑定', parentPath: 'flowauth' }
+                    meta: { title: '流程绑定' }
                 },
                 {
                     path: '/instanquery',
                     component: resolve => require(['../components/page/Instanquery.vue'], resolve),
                     meta: { title: '流程实例' }
+                },
+                {
+                    path: '/process_info',
+                    component: resolve => require(['../components/page/ProcessInfo.vue'], resolve),
+                    meta: { title: '过程信息' }
                 },
 
 

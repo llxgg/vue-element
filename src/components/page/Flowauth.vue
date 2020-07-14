@@ -91,7 +91,7 @@
 
         <!--  -->
         <div class="screen-btn">
-          <el-button type="primary" style="width: 80px;" @click="getTableData">查询结果</el-button>
+          <el-button type="primary" style="width: 80px;" @click="getTableData(1)">查询结果</el-button>
           <el-button style="width: 80px;margin-left: 10px;color:#409EFF;" @click="resetQuery">重置</el-button>
         </div>
       </div>
@@ -113,7 +113,7 @@
       </div>
 
       <!-- 表格 -->
-      <div style="margin-top: 8px;">
+      <div style="margin-top: 8px;" id="el__table">
         <el-table
           :data="tableData"
           min-height="250"
@@ -122,8 +122,8 @@
           :header-cell-style="setHeaderStyle"
           :cell-style="setRowStyle"
         >
-          <el-table-column type="selection" width="55" :show-overflow-tooltip="true"></el-table-column>
-          <el-table-column label="序号" width="50" type="index"></el-table-column>
+          <el-table-column type="selection" width="70" :show-overflow-tooltip="true"></el-table-column>
+          <el-table-column label="序号" width="70" type="index"></el-table-column>
 
           <el-table-column prop="declarationName" label="申报方向" width="110"></el-table-column>
           <el-table-column prop="code" label="申报编码" width="110"></el-table-column>
@@ -161,7 +161,24 @@
 
           <el-table-column label="操作" width="300">
             <template slot-scope="scope">
-              <el-button size="mini" style="margin-right:6px;" @click="handleSee(scope.row)">查看</el-button>
+              <el-link
+                style="margin-right:22px;color:#1ABC9C;"
+                :underline="false"
+                @click="handleSee(scope.row)"
+              >查看</el-link>
+              <el-link
+                style="margin-right:22px;color:#1ABC9C;"
+                :underline="false"
+                @click="handleEdit(scope.row)"
+              >编辑</el-link>
+              <el-link
+                style="margin-right:22px;color:#1ABC9C;"
+                :underline="false"
+                @click="handleSend(scope.row)"
+              >发布</el-link>
+              <el-link style="color:#1ABC9C;" :underline="false" @click="handleRemove(scope.row)">删除</el-link>
+
+              <!-- <el-button size="mini" style="margin-right:6px;" @click="handleSee(scope.row)">查看</el-button>
               <el-button size="mini" style="margin-right:6px;" @click="handleEdit(scope.row)">编辑</el-button>
               <el-button
                 size="mini"
@@ -169,7 +186,7 @@
                 @click="handleSend(scope.row)"
                 style="margin-right:6px;"
               >发布</el-button>
-              <el-button size="mini" type="danger" @click="handleRemove(scope.row)">删除</el-button>
+              <el-button size="mini" type="danger" @click="handleRemove(scope.row)">删除</el-button>-->
             </template>
           </el-table-column>
         </el-table>
@@ -187,10 +204,17 @@
         ></el-pagination>
 
         <!-- 删除提示 -->
-        <el-dialog title="提示" :visible.sync="showDelete" :modal="true" width="400px" style='text-align:center;' id='dialog_footer'>
+        <el-dialog
+          title="提示"
+          :visible.sync="showDelete"
+          :modal="true"
+          width="400px"
+          style="text-align:center;"
+          id="dialog_footer"
+        >
           <span>删除后无法恢复，您是否确定删除当前流程？</span>
           <span slot="footer" class="dialog-footer">
-            <el-button @click="showDelete = false" style='margin-right:16px;'>取 消</el-button>
+            <el-button @click="showDelete = false" style="margin-right:16px;">取 消</el-button>
             <el-button type="primary" @click="deleteFlow">确 定</el-button>
           </span>
         </el-dialog>
@@ -203,7 +227,7 @@
 import { timestamp, timestampYMD } from "../../util/date.js";
 import { post, post1 } from "../../util/http.js";
 import {
-  getDeclareList,
+  getDeclareRoleList,
   delDeclaration,
   declareListProject
 } from "../../util/api.js";
@@ -254,15 +278,11 @@ export default {
       sendStatues: [
         {
           value: 1,
-          label: "正常"
+          label: "暂存"
         },
         {
           value: 2,
-          label: "停用"
-        },
-        {
-          value: 3,
-          label: "冻结"
+          label: "提交"
         }
       ],
 
@@ -270,7 +290,11 @@ export default {
       sortRanks: [
         {
           value: "asc",
-          label: "时间排序"
+          label: "时间升序"
+        },
+        {
+          value: "desc",
+          label: "时间倒序"
         }
       ],
       tableData: [], // 表格数据
@@ -301,30 +325,30 @@ export default {
   },
   methods: {
     // 新增授权
-    addAuth() {
+    addAuth(scope) {
       this.$router.push({
         path: "/add_flow",
         query: { flag: 2 } // 2 为授权这一块的
       });
     },
     // 授权状态
-    queryRoleStatus(status){
-      console.log('授权状态',status);
-      switch(status){
-        case"0":
-        return "未授权"
-        case"1":
-        return "已授权"
+    queryRoleStatus(status) {
+      console.log("授权状态", status);
+      switch (status) {
+        case "0":
+          return "未授权";
+        case "1":
+          return "已授权";
       }
     },
     // 发布状态
-    querySendStatus(status){
-      console.log('发布状态：',status);
-      switch(status){
-        case"0":
-        return "未发布"
-        case"1":
-        return "已发布"
+    querySendStatus(status) {
+      console.log("发布状态：", status);
+      switch (status) {
+        case "0":
+          return "未发布";
+        case "1":
+          return "已发布";
       }
     },
 
@@ -345,6 +369,7 @@ export default {
     // 清空输入的流程名称
     clearFlowName() {
       this.screenData.name = "";
+      this.pagenum = 1;
       // 重新请求
       this.getTableData();
     },
@@ -385,7 +410,7 @@ export default {
     },
 
     //获取表格数据
-    getTableData() {
+    getTableData(page) {
       let me = this;
 
       let startTime = me.screenData.startDate
@@ -424,9 +449,11 @@ export default {
       //   endTime
       // );
 
-      post1(me, getDeclareList, {
+      let pagenum = page || this.pagenum;
+
+      post1(me, getDeclareRoleList, {
         limit: me.pagesize,
-        page: me.pagenum,
+        page: pagenum,
         likeALL_flow_Name: name,
         orderType: sortOrder, // 排序
         "eqString_d.project_Id": projectId,
@@ -471,14 +498,14 @@ export default {
       console.log("查看那个：", scope);
       this.$router.push({
         path: "/add_flow",
-        query: { flag: 2, Id: scope.declarationFlowId }
+        query: { flag: 2, Id: scope.FLOW_ID }
       });
     },
     handleEdit(scope) {
       console.log("编辑那个：", scope);
       this.$router.push({
         path: "/add_flow",
-        query: { flag: 2, Id: scope.declarationFlowId }
+        query: { flag: 2, Id: scope.FLOW_ID }
       });
     },
     handleSend(scope) {
@@ -518,7 +545,7 @@ export default {
     goPageToInstan(scope) {
       let flowId = scope.FLOW_ID;
       console.log("id：", flowId);
-      this.$router.push({path: '/instanquery',query:{flowId: flowId}})
+      this.$router.push({ path: "/instanquery", query: { flowId: flowId } });
     }
   },
 
@@ -527,6 +554,7 @@ export default {
     // 监听排序方式是否发生了改变
     "screenData.sortOrder": function(newVal, oldVal) {
       console.log("排序方式是否发生了变化：", newVal, oldVal);
+      this.pagenum = 1;
       // 请求
       this.getTableData();
     }
@@ -555,6 +583,10 @@ export default {
 }
 
 #dialog_footer >>> .el-dialog__footer {
-  text-align: center!important;
+  text-align: center !important;
+}
+
+#el__table >>> .el-checkbox__inner {
+  margin-left: 0;
 }
 </style>

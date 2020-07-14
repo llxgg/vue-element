@@ -23,10 +23,7 @@
               </div>
               </el-tab-pane>
               <el-tab-pane label="PDF模板" name="2">
-                <!-- <iframe src="http://10.168.1.220:9038/upload/pdf/20200622/7d0a68cf-7189-40a1-bf90-94ebaf2710fb.pdf" width="100%" height="1000px"></iframe> -->
-                <iframe :src="pdfpc" width="100%" height="1000px"></iframe>
-                <!-- <pdf src="http://10.168.1.220:9038/upload/pdf/20200622/7d0a68cf-7189-40a1-bf90-94ebaf2710fb.pdf"></pdf> -->
-                <!-- <pdf :src='pdfpc'></pdf> -->
+                <div id="pdf" style="height:1000px;width: 100%;margin: 0 auto"></div>
               </el-tab-pane>
               <el-tab-pane label="移动端" name="3">
                 <div style="margin-top: 20px;height: auto;background: #efefef;width:100%;text-align: center;">
@@ -45,8 +42,9 @@
     </div>
 </template>
 <script>
+import PDFObject from 'pdfobject'
 import { post } from "../../util/http.js";
-import { test, getTableInfo, IP, tableSave } from "../../util/api.js";
+import { getTableInfo, IP, tableSave } from "../../util/api.js";
 import pdf from "vue-pdf";
 
 export default {
@@ -139,18 +137,13 @@ export default {
         }
       })
     },
-    getMB() {
-      var me = this;
-      post(me, test).then(res => {
-        me.content = res.content;
-      });
-    },
     getTableDetail(id) {
       var me = this;
       console.log(id);
       post(me, getTableInfo, { id }).then(res => {
         if (res.status == "1" && res.content) {
-          me.pdfpc = res.content.pdfUrl;
+          // me.pdfpc = res.content.pdfUrl;
+          PDFObject.embed(res.content.pdfUrl, "#pdf");
         } else {
           me.$message({
             type: "error",

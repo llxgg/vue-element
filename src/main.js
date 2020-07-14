@@ -7,6 +7,8 @@ import 'element-ui/lib/theme-chalk/index.css'; // 默认主题
 import './assets/css/icon.css';
 import './components/common/directives';
 import "babel-polyfill";
+import "./assets/css/icon/iconfont.css"
+
 
 Vue.prototype.$axios = axios;
 let token ;

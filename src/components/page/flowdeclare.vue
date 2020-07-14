@@ -31,7 +31,7 @@
         <!-- 所属项目 -->
         <el-select
           v-model="screenData.project"
-          style="width: 120px;margin-left: 10px;"
+          style="width: 180px;margin-left: 10px;"
           placeholder="所属项目名称"
         >
           <el-option
@@ -87,11 +87,19 @@
             style="width: 130px;margin-left:10px;"
             :picker-options="pickerOptionsEnd"
           ></el-date-picker>
+
+          <!-- <el-date-picker
+            v-model="screenData.allDate"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+          ></el-date-picker>-->
         </div>
 
         <!--  -->
         <div class="screen-btn">
-          <el-button type="primary" style="width: 80px;" @click="getTableData">查询结果</el-button>
+          <el-button type="primary" style="width: 80px;" @click="getTableData(1)">查询结果</el-button>
           <el-button style="width: 80px;margin-left: 10px;color:#409EFF;" @click="resetQuery">重置</el-button>
         </div>
       </div>
@@ -113,7 +121,7 @@
       </div>
 
       <!-- 表格 -->
-      <div style="margin-top: 8px;">
+      <div style="margin-top: 8px;" id="el__table">
         <el-table
           :data="tableData"
           min-height="250"
@@ -122,8 +130,8 @@
           :header-cell-style="setHeaderStyle"
           :cell-style="setRowStyle"
         >
-          <el-table-column type="selection" width="55" :show-overflow-tooltip="true"></el-table-column>
-          <el-table-column label="序号" width="50" type="index"></el-table-column>
+          <el-table-column type="selection" width="70" :show-overflow-tooltip="true"></el-table-column>
+          <el-table-column label="序号" width="70" type="index"></el-table-column>
 
           <el-table-column prop="declarationName" label="申报方向" width="130"></el-table-column>
           <el-table-column prop="code" label="申报编码" width="130"></el-table-column>
@@ -157,14 +165,27 @@
                 @click="handleRole(scope.row)"
                 v-if="scope.row.grantStatus == 0"
               >授权</el-button>-->
-              <el-button size="mini" style="margin-right:6px;" @click="handleSee(scope.row)">查看</el-button>
+
+              <!-- <el-button size="mini" style="margin-right:6px;" @click="handleSee(scope.row)">查看</el-button>
               <el-button
                 size="mini"
                 type="primary"
                 @click="handleEdit(scope.row)"
                 style="margin-right:6px;"
               >编辑</el-button>
-              <el-button size="mini" type="danger" @click="handleRemove(scope.row)">删除</el-button>
+              <el-button size="mini" type="danger" @click="handleRemove(scope.row)">删除</el-button>-->
+
+              <el-link
+                style="margin-right:22px;color:#1ABC9C;"
+                :underline="false"
+                @click="handleSee(scope.row)"
+              >查看</el-link>
+              <el-link
+                style="margin-right:22px;color:#1ABC9C;"
+                :underline="false"
+                @click="handleEdit(scope.row)"
+              >编辑</el-link>
+              <el-link style="color:#1ABC9C;" :underline="false" @click="handleRemove(scope.row)">删除</el-link>
             </template>
           </el-table-column>
         </el-table>
@@ -182,10 +203,17 @@
         ></el-pagination>
 
         <!-- 删除提示 -->
-        <el-dialog title="提示" :visible.sync="showDelete" :modal="true" width="400px" style='text-align:center;' id='dialog_footer'>
+        <el-dialog
+          title="提示"
+          :visible.sync="showDelete"
+          :modal="true"
+          width="400px"
+          style="text-align:center;"
+          id="dialog_footer"
+        >
           <span>删除后无法恢复，您是否确定删除当前流程？</span>
           <span slot="footer" class="dialog-footer">
-            <el-button @click="showDelete = false" style='margin-right:16px;'>取 消</el-button>
+            <el-button @click="showDelete = false" style="margin-right:16px;">取 消</el-button>
             <el-button type="primary" @click="deleteFlow">确 定</el-button>
           </span>
         </el-dialog>
@@ -195,9 +223,15 @@
 </template>
 
 <script>
+import bus from "../common/bus";
+
 import { timestamp, timestampYMD } from "../../util/date.js";
 import { post, post1 } from "../../util/http.js";
-import { getDeclareList, declareListProject } from "../../util/api.js";
+import {
+  getDeclareList,
+  declareListProject,
+  submitDeclaration
+} from "../../util/api.js";
 
 export default {
   components: {},
@@ -210,9 +244,12 @@ export default {
 
         startDate: "",
         endDate: "",
+        allDate: "", // 开始结束时间
         sortOrder: "" // 排序方式
       },
       showDelete: false, // 删除绑定的流程
+      deleteFlowId: "", // 需要删除的流程id
+
       // 所属项目
       projects: [
         {
@@ -233,7 +270,11 @@ export default {
       sortRanks: [
         {
           value: "asc",
-          label: "时间排序"
+          label: "时间升序"
+        },
+        {
+          value: "desc",
+          label: "时间倒序"
         }
       ],
 
@@ -286,6 +327,8 @@ export default {
     // 清空输入的流程名称
     clearFlowName() {
       this.screenData.name = "";
+      this.pagenum = 1;
+      this.getTableData();
     },
 
     // 分页
@@ -324,7 +367,7 @@ export default {
     },
 
     //获取表格数据
-    getTableData() {
+    getTableData(page) {
       let me = this;
 
       let startTime = me.screenData.startDate
@@ -334,7 +377,6 @@ export default {
         ? timestampYMD(me.screenData.endDate)
         : "";
 
-      // 防止用户只选一个
       if ((startTime && !endTime) || (!startTime && endTime)) {
         me.$message({
           type: "warning",
@@ -343,17 +385,36 @@ export default {
         return;
       }
 
+      // let startTime;
+      // let endTime;
+      //   if(me.screenData.allDate){
+      //    startTime = timestampYMD(me.screenData.allDate[0])
+      //    endTime = timestampYMD(me.screenData.allDate[1])
+      //   }else {
+      //     startTime = ""
+      //     endTime = ""
+      //   }
+
       // 获取其他筛选数据
       let name = me.screenData.name ? me.screenData.name.trim() : "";
       let projectId = me.screenData.project ? me.screenData.project : "";
 
       let sortOrder = me.screenData.sortOrder ? me.screenData.sortOrder : "";
 
-      console.warn("申报流程配置--需要的搜索数据；", name, projectId,  sortOrder);
+      console.warn(
+        "申报流程配置--需要的搜索数据；",
+        name,
+        projectId,
+        sortOrder
+      );
+
+      let pagenum = page || this.pagenum;
+      console.warn("=======pagenum=========:", pagenum);
+      this.pagenum = pagenum;
 
       post1(me, getDeclareList, {
         limit: me.pagesize,
-        page: me.pagenum,
+        page: pagenum,
         likeALL_flow_Name: name,
         orderType: sortOrder, // 排序
         "eqString_d.project_Id": projectId,
@@ -383,7 +444,11 @@ export default {
       me.screenData.startDate = "";
       me.screenData.endDate = "";
 
-      console.log("重置查询后的查询要求是：", me.screenData, me.screenData.sortOrder);
+      console.log(
+        "重置查询后的查询要求是：",
+        me.screenData,
+        me.screenData.sortOrder
+      );
       // 重新请求数据炫染
       me.getTableData();
     },
@@ -391,20 +456,29 @@ export default {
     // 表格事件
     handleSee(scope) {
       console.log("查看那个", scope);
+
+      // 吧需要的信息保存到本地
+      // localStorage.setItem("bindFlowScope", JSON.stringify(scope));
+      scope.editFlag = false;
+      bus.$emit("bindFlowScope", scope);
+
       this.$router.push({ path: "/bind_flow" });
     },
     handleEdit(scope) {
       console.log("编辑那个", scope);
       this.$router.push({ path: "/bind_flow" });
     },
-    handleRemove() {
+    handleRemove(scope) {
+      return console.log("当前要删除的id：", scope);
+      this.deleteFlowId = scope.declarationId;
       // 打开弹出框
       this.showDelete = true;
     },
 
-    // 确定删除当前流程
+    // 确定删除当前流程(还没做)
     deleteFlow() {
       // 删除请求：.......
+      alert("正在开发中...");
       // 隐藏弹出框
       this.showDelete = false;
     }
@@ -415,6 +489,7 @@ export default {
     // 监听排序方式是否发生了改变
     "screenData.sortOrder": function(newVal, oldVal) {
       console.log("排序方式是否发生了变化：", newVal, oldVal);
+      this.pagenum = 1;
       // 请求
       this.getTableData();
     }
@@ -444,6 +519,10 @@ export default {
 }
 
 #dialog_footer >>> .el-dialog__footer {
-  text-align: center!important;
+  text-align: center !important;
+}
+
+#el__table >>> .el-checkbox__inner {
+  margin-left: 0;
 }
 </style>

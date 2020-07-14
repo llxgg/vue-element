@@ -293,7 +293,7 @@ export default {
 
   mounted() {
     // 获取表格数据
-    // this.getTableData();
+    this.getTableData();
   }
 };
 </script>

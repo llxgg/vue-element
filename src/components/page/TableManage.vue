@@ -94,13 +94,13 @@
                     <el-table-column
                     prop="createTime"
                     label="创建时间"
-                    width="200">
+                    width="150">
                       <template slot-scope="scope">
                           <span>{{formatDate(scope.row.createTime, "yy-mm-dd hh:mm:ss")}}</span>
                           <!-- <span>{{scope}}</span> -->
                       </template>
                     </el-table-column>
-                    <el-table-column label="操作" align='right'>
+                    <el-table-column label="操作" align='right' width="300">
                         <template slot-scope="scope">
                             <el-button
                             size="mini"

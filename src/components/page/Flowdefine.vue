@@ -36,7 +36,7 @@
         ></el-input>
 
         <!-- 发布状态 -->
-        <el-select
+        <!-- <el-select
           v-model="screenData.status"
           style="width: 120px;margin-left: 10px;"
           placeholder="发布状态"
@@ -47,7 +47,7 @@
             :label="item.label"
             :value="item.value"
           ></el-option>
-        </el-select>
+        </el-select>-->
 
         <!-- 创建时间 -->
         <div style="margin-left: 10px;">
@@ -70,7 +70,7 @@
 
         <!--  -->
         <div class="screen-btn">
-          <el-button type="primary" style="width: 80px;" @click="getTableData">查询结果</el-button>
+          <el-button type="primary" style="width: 80px;" @click="getTableData(1)">查询结果</el-button>
           <el-button style="width: 80px;margin-left: 10px;color:#409EFF;" @click="resetQuery">重置</el-button>
         </div>
       </div>
@@ -103,10 +103,10 @@
       </div>
 
       <!-- 表格 -->
-      <div style="margin-top: 8px;">
+      <div style="margin-top: 8px;" id='el__table'>
         <el-table
           :data="tableData"
-          height="272"
+          min-height="250"
           border
           style="width: 100%"
           :header-cell-style="setHeaderStyle"
@@ -114,8 +114,8 @@
           @select="handleSelectFlow"
           @select-all="handleSelectFlowAll"
         >
-          <el-table-column type="selection" width="60" :show-overflow-tooltip="true"></el-table-column>
-          <el-table-column label="序号" width="60" type="index"></el-table-column>
+          <el-table-column type="selection" width="70" :show-overflow-tooltip="true"></el-table-column>
+          <el-table-column label="序号" width="70" type="index"></el-table-column>
 
           <el-table-column prop="flowName" label="流程名称" width="180"></el-table-column>
           <el-table-column prop="flowCode" label="流程编码" width="150"></el-table-column>
@@ -138,14 +138,26 @@
 
           <el-table-column prop="flowId" label="操作" width="260">
             <template slot-scope="scope">
-              <el-button size="mini" @click="handleSee(scope.row)" style="margin-right:6px;">查看</el-button>
+              <!-- <el-button size="mini" @click="handleSee(scope.row)" style="margin-right:6px;">查看</el-button>
               <el-button
                 size="mini"
                 type="primary"
                 @click="handleEdit(scope.row)"
                 style="margin-right:6px;"
               >编辑</el-button>
-              <el-button size="mini" type="danger" @click="handleRemove(scope.row)">删除</el-button>
+              <el-button size="mini" type="danger" @click="handleRemove(scope.row)">删除</el-button>-->
+
+              <el-link
+                style="margin-right:22px;color:#1ABC9C;"
+                :underline="false"
+                @click="handleSee(scope.row)"
+              >查看</el-link>
+              <el-link
+                style="margin-right:22px;color:#1ABC9C;"
+                :underline="false"
+                @click="handleEdit(scope.row)"
+              >编辑</el-link>
+              <el-link style="color:#1ABC9C;" :underline="false" @click="handleRemove(scope.row)">删除</el-link>
             </template>
           </el-table-column>
         </el-table>
@@ -162,7 +174,7 @@
           style="margin-top: 10px;width:100%;overflow:hidden;"
         ></el-pagination>
 
-        <!-- 删除提示 -->
+        <!-- 删除单个的提示 -->
         <el-dialog
           title="提示"
           style="text-align:center;"
@@ -177,6 +189,22 @@
             <el-button type="primary" @click="deleteFlowSelect">确 定</el-button>
           </span>
         </el-dialog>
+
+        <!-- 删除多个的提示 -->
+        <el-dialog
+          title="提示"
+          style="text-align:center;"
+          :visible.sync="showDeleteAll"
+          :modal="true"
+          width="400px"
+          id="dialog_footer"
+        >
+          <span>{{showDeleteAllTip}}</span>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="showDeleteAll = false" style="margin-right:16px;">取 消</el-button>
+            <el-button type="primary" @click="deleteFlowSelectAll">确 定</el-button>
+          </span>
+        </el-dialog>
       </div>
     </div>
   </div>
@@ -185,7 +213,12 @@
 <script>
 import { timestamp, timestampYMD } from "../../util/date.js";
 import { post, post1 } from "../../util/http.js";
-import { getFlowData, deleteFlow, queryIdFlowNode } from "../../util/api.js";
+import {
+  getFlowData,
+  deleteFlow,
+  deleteAllFlow,
+  queryIdFlowNode
+} from "../../util/api.js";
 
 export default {
   components: {},
@@ -204,27 +237,31 @@ export default {
       showDelete: false, // 删除流程弹窗
       removeFlowId: "", // 要删除那个节点
 
+      showDeleteAll: false, // 删除多个流程
+      deleteFlowArr: [], // 要删除的流程集合
+      showDeleteAllTip: "", // 提示
+
       flowStatus: [
         // 发布状态
         {
-          value: 0,
-          label: "停用"
-        },
-        {
           value: 1,
-          label: "冻结"
+          label: "暂存"
         },
         {
           value: 2,
-          label: "正常"
+          label: "提交"
         }
       ],
 
       //  排序方式
-      sortRanks: [
+       sortRanks: [
         {
           value: "asc",
-          label: "时间排序"
+          label: "时间升序"
+        },
+        {
+          value: "desc",
+          label: "时间倒序"
         }
       ],
 
@@ -261,6 +298,7 @@ export default {
     setRowStyle() {
       return "text-align:center";
     },
+
     //格式化table中的日期
     formatDate(value, format) {
       console.log("格式化table中的日期", value, format);
@@ -268,7 +306,7 @@ export default {
     },
     // 处理表格中的流程状态的回显
     queryFlowStatus(status) {
-      console.log('流程状态：',status);
+      console.log("流程状态：", status);
 
       switch (status) {
         // case "0":
@@ -313,7 +351,24 @@ export default {
     },
 
     //获取表格数据
-    getTableData() {
+    getTableData(page) {
+      //       this.tableData = [
+      //   {
+      //     code: "123456",
+      //     declareName: "东莞市高端人才认定及个人所得税补贴",
+      //     project: "人才补贴",
+      //     flowName: "境外人才补贴申领",
+      //     status: 1
+      //   },
+      //   {
+      //     code: "66896",
+      //     declareName: "东莞市高端人才认定及个人所得税补贴",
+      //     project: "人才补贴",
+      //     flowName: "境外人才补贴申领",
+      //     status: 2
+      //   }
+      // ];
+
       let me = this;
       let startTime = me.screenData.startDate
         ? timestampYMD(me.screenData.startDate)
@@ -347,6 +402,10 @@ export default {
       //   me.pagesize
       // );
 
+      let pagenum = page || this.pagenum
+
+      console.warn('=======pagenum=========:',pagenum);
+
       // 请求数据....
       post1(me, getFlowData, {
         flowName: name,
@@ -355,7 +414,7 @@ export default {
         endTime: endTime,
         orderType: sortOrder,
         limit: this.pagesize,
-        start: this.pagenum
+        page: pagenum
       })
         .then(res => {
           console.log("得到的数据：", res);
@@ -373,21 +432,85 @@ export default {
     // 重置查询要求
     resetQuery() {
       let me = this;
-      me.screenData = {
-        name: "",
-        code: "",
-        status: "",
-        startDate: "",
-        endDate: ""
-      };
+      // me.screenData = {
+      //   name: "",
+      //   code: "",
+      //   status: "",
+      //   startDate: "",
+      //   endDate: ""
+      // };
+
+      me.screenData.name = "";
+      me.screenData.code = "";
+      me.screenData.startDate = "";
+      me.screenData.endDate = "";
+
+      me.screenData.allDate = "";
+
       console.log("重置查询后的查询要求是：", me.screenData);
       // 重新请求数据炫染
       me.getTableData();
     },
 
     // 批量删除
+    // 自定义选择
+    handleSelectFlow(selection, row) {
+      console.log("选择了那个：", selection, row);
+      // 把全选的内容id先保存为一个数组
+      var deleteFlowArr = selection.map(item => item.flowId);
+      console.log("要删除的id集合：", deleteFlowArr);
+      // 保存：
+      this.deleteFlowArr = deleteFlowArr;
+    },
+    // 全选事件
+    handleSelectFlowAll(selection) {
+      console.log("全选", selection);
+      // 把全选的内容id先保存为一个数组
+      var deleteFlowArr = selection.map(item => item.flowId);
+      console.log("要删除的id集合：", deleteFlowArr);
+      // 保存：
+      this.deleteFlowArr = deleteFlowArr;
+    },
     deleteAllFlow() {
-      alert("批量删除");
+      if (this.deleteFlowArr.length > 0) {
+        // 弹框
+        this.showDeleteAllTip = `是否确认删除当前选中的${this.deleteFlowArr.length}项流程`;
+        this.showDeleteAll = true;
+      } else {
+        this.showDeleteAllTip = "请选择需要批量删除的流程";
+        this.showDeleteAll = true;
+      }
+    },
+    deleteFlowSelectAll() {
+      let me = this;
+      // 隐藏
+      this.showDeleteAll = false;
+
+      // 执行删除操作
+      if (this.deleteFlowArr.length > 0) {
+        post(me, deleteAllFlow, {
+          flowIds: this.deleteFlowArr
+        })
+          .then(res => {
+            console.log("批量删除的结果：", res);
+            if (res && res.code == 0) {
+              this.$message.success(res.msg || "批量删除成功");
+
+             // 重新请求表格
+                this.getTableData();
+
+            } else {
+              // 重新请求表格
+              // this.getTableData();
+              this.$message.error(res.msg || "批量删除失败，请稍后再试");
+            }
+          })
+          .catch(err => {
+            console.log("批量删除异常：", err);
+          });
+      } else {
+        this.showDeleteAll = false;
+      }
     },
 
     // 表格事件
@@ -453,18 +576,6 @@ export default {
       });
     },
 
-    // checkbox
-    handleSelectFlow(selection, row) {
-      console.log("选择了那个：", selection, row);
-      if (selection && selection.length == 1) {
-        this.historyFlowCode = row.flowCode;
-      }
-    },
-    // 全选事件
-    handleSelectFlowAll(selection) {
-      console.log("全选", selection);
-    },
-
     // 历史版本
     getHistoryFlow() {
       console.log("历史版本：", this.historyFlowCode);
@@ -485,6 +596,7 @@ export default {
     // 监听排序方式是否发生了改变
     "screenData.sortOrder": function(newVal, oldVal) {
       console.log("排序方式是否发生了变化：", newVal, oldVal);
+      this.pagenum = 1;
       // 请求
       this.getTableData();
     }
@@ -512,5 +624,9 @@ export default {
 
 #dialog_footer >>> .el-dialog__footer {
   text-align: center !important;
+}
+
+#el__table >>> .el-checkbox__inner {
+    margin-left: 0;
 }
 </style>

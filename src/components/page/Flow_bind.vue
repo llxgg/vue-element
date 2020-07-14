@@ -1,98 +1,126 @@
 <!-- 项目绑定 -->
 <template>
-  <div style="background-color:#fff;">
-    <div class="search" style="margin:10px 0 0px 120px;">
-      <el-input
-        placeholder="请输入搜索关键字"
-        v-model="searchInput"
-        clearable
-        @clear="clearSearch"
-        style="width:300px;margin-right:30px;"
-      ></el-input>
+  <div>
+    <!-- 面包屑 -->
+    <div class="crumbs">
+      <!-- <el-breadcrumb separator="/">
+        <el-breadcrumb-item>
+          <i class="el-icon-lx-calendar"></i> 流程配置 / 流程授权
+        </el-breadcrumb-item>
+      </el-breadcrumb>-->
 
-      <el-button type="primary" style="width:70px;" @click="getDeclarationProject">搜索</el-button>
+      <el-breadcrumb separator-class="el-icon-arrow-right" separator=">">
+        <el-breadcrumb-item>申报流程配置</el-breadcrumb-item>
+        <el-breadcrumb-item>新增申报流程</el-breadcrumb-item>
+      </el-breadcrumb>
     </div>
 
-    <div>
-      <el-form :model="bindFlow" :rules="rules" ref="ruleForm" label-width="120px">
-        <div class="form">
-          <el-form-item label="选择项目" prop="project" style="text-indent:20px" id="select-project"></el-form-item>
-          <div class="form-left">
-            <div style="background-color:#f9fafc;line-height:45px;text-indent: 30px;">项目绑定</div>
-            <el-tree
-              ref="tree"
-              :data="flowProjectData"
-              :props="projectProps"
-              show-checkbox
-              :default-expand-all="true"
-              node-key="id"
-              class="eltree"
-            ></el-tree>
-          </div>
+    <div style="background-color:#fff;">
+      <div id="search" style="margin:10px 0 0px 120px;">
+        <el-input
+          placeholder="请输入搜索关键字(2)"
+          v-model="searchInput"
+          clearable
+          @clear="clearSearch"
+          style="width:300px;margin-right:30px;"
+        ></el-input>
 
-          <div class="form-right">
-            <el-form-item label="流程搜索：" prop="flowSearch">
-              <!-- <el-input v-model="bindFlow.flowSearch"></el-input> -->
+        <el-button type="primary" size="small " @click="getDeclarationProject">搜索</el-button>
+      </div>
 
-              <el-select
-                style="width:210px;"
-                v-model="bindFlow.flowSearch"
-                filterable
-                remote
-                reserve-keyword
-                placeholder="请输入关键词"
-                :remote-method="remoteMethod"
-                :loading="loading"
-              >
-                <el-option
-                  v-for="item in options"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                ></el-option>
-              </el-select>
-            </el-form-item>
+      <div>
+        <el-form :model="bindFlow" :rules="rules" ref="ruleForm" label-width="120px">
+          <div class="form">
+            <el-form-item label="选择项目" prop="project" style="text-indent:20px" id="select-project"></el-form-item>
 
-            <el-form-item label="流程名称：" prop="flowName">
-              <el-input v-model="bindFlow.flowName" style="width:210px;"></el-input>
-            </el-form-item>
+            <div class="form-left">
+              <div style="background-color:#f9fafc;line-height:45px;text-indent: 30px;">项目绑定</div>
+              <!-- :props 节点配置项 -->
+              <el-tree
+                ref="tree"
+                :data="flowProjectData"
+                :props="projectProps"
+                show-checkbox
+                :default-expand-all="true"
 
-            <el-form-item label="流程版本：" prop="flowEdition">
-              <el-select v-model="bindFlow.flowEdition" placeholder="请选择流程版本" style="width:210px;">
+                :default-checked-keys="defaultCheckedArr"
+
+                node-key="id"
+                class="eltree"
+                highlight-current
+              ></el-tree>
+            </div>
+
+            <div class="form-right">
+              <el-form-item label="流程搜索：" prop="flowSearch">
+                <!-- <el-input v-model="bindFlow.flowSearch"></el-input> -->
+
+                <el-select
+                  style="width:250px;"
+                  v-model="bindFlow.flowSearch"
+                  clearable
+                  filterable
+                  placeholder="请输入关键词"
+                >
+                  <el-option
+                    v-for="item in options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  ></el-option>
+                </el-select>
+              </el-form-item>
+
+              <el-form-item label="流程名称：" prop="flowName">
+                <el-input v-model="bindFlow.flowName" style="width:250px;"></el-input>
+              </el-form-item>
+
+              <el-form-item label="流程版本：" prop="flowEdition">
+                <!-- <el-select v-model="bindFlow.flowEdition" placeholder="请选择流程版本" style="width:210px;">
                 <el-option label="1" value="one"></el-option>
                 <el-option label="2" value="two"></el-option>
-              </el-select>
-            </el-form-item>
+                </el-select>-->
 
-            <!-- <el-form-item label="通用流程：" prop="flowCurrency">
+                <el-input v-model="bindFlow.flowEdition" placeholder="请选择流程版本" style="width:250px;"></el-input>
+              </el-form-item>
+
+              <!-- <el-form-item label="通用流程：" prop="flowCurrency">
               <el-radio-group v-model="bindFlow.flowCurrency">
                 <el-radio label="是"></el-radio>
                 <el-radio label="否"></el-radio>
               </el-radio-group>
-            </el-form-item>-->
+              </el-form-item>-->
 
-            <!-- <el-form-item label="是否特定区域：" prop="flowRegion">
+              <!-- <el-form-item label="是否特定区域：" prop="flowRegion">
               <el-radio-group v-model="bindFlow.flowRegion">
                 <el-radio label="是"></el-radio>
                 <el-radio label="否"></el-radio>
               </el-radio-group>
-            </el-form-item>-->
+              </el-form-item>-->
+            </div>
           </div>
-        </div>
 
-        <div>
-          <el-form-item class="bottom">
-            <el-button style="margin-right:30px;" @click="cancelFlow" class="elbutton">取消</el-button>
-            <el-button type="primary" @click="submitFlow('ruleForm')" class="elbutton">提交</el-button>
-          </el-form-item>
-        </div>
-      </el-form>
+          <div>
+            <el-form-item class="bottom">
+              <el-button style="margin-right:30px;" @click="cancelFlow" class="elbutton">取消</el-button>
+              <el-button type="primary" @click="submitFlow('ruleForm')" class="elbutton">提交</el-button>
+            </el-form-item>
+          </div>
+        </el-form>
+      </div>
     </div>
   </div>
 </template>
 <script>
+import bus from "../common/bus";
+import Axios from "axios";
+
 import { post1, post } from "../../util/http.js";
-import { bindDeclarationProject, searchFlow } from "../../util/api.js";
+import {
+  bindDeclarationProject,
+  searchFlow,
+  submitDeclaration
+} from "../../util/api.js";
 
 export default {
   components: {},
@@ -113,6 +141,8 @@ export default {
       searchInput: "", // 搜索内容
       options: [],
       loading: false,
+
+      defaultCheckedArr:[], // 回显选中的叶子节点
 
       // 选择项目（项目绑定）
       flowProjectData: [
@@ -160,16 +190,17 @@ export default {
 
       // 表单数据
       bindFlow: {
+        project: "",
         flowSearch: "",
         flowName: "",
         flowEdition: "", // 版本
         flowCurrency: "", // 通用流程
         flowRegion: "" // 特定区域
-        // selectProject: "", // 选中的项目编号
+        // selectProject: "" // 选中的项目编号
       },
 
       rules: {
-        // project: [{ type: 'array', required: true, message: "请选择项目", trigger: 'change' }],
+        project: [{ required: true, message: "请选择项目", trigger: "change" }],
         // project: [{ validator: checkProject, trigger: 'blur' }],
 
         flowSearch: [
@@ -180,7 +211,7 @@ export default {
           // { min: 3, max: 5, message: "长度在 3 到 5 个字符", trigger: "blur" }
         ],
         flowEdition: [
-          { required: true, message: "请选择流程版本", trigger: "change" }
+          { required: true, message: "请选择流程版本", trigger: "blur" }
         ],
 
         flowCurrency: [
@@ -200,17 +231,17 @@ export default {
       post1(me, bindDeclarationProject, {
         projectName: searchProject
       })
-        .then(res => {
-          console.log("获取绑定项目的数据：", res);
-          if (res && res.code == 1) {
-            me.flowProjectData = res.data.zcProjects;
-          } else {
-            console.log("读取异常：", res.msg);
-          }
-        })
-        .catch(err => {
-          console.log("获取绑定项目数据异常：", err);
-        });
+      .then(res => {
+        console.log("获取绑定项目的数据：", res);
+        if (res && res.code == 1) {
+          me.flowProjectData = res.data.zcProjects;
+        } else {
+          console.log("读取异常：", res.msg);
+        }
+      })
+      .catch(err => {
+        console.log("获取绑定项目数据异常：", err);
+      });
     },
 
     // 删除输入的项目搜索内容（回显所有的）
@@ -222,74 +253,185 @@ export default {
       let me = this;
       console.log("输入的搜索内容", query);
 
-      if (query !== "") {
-        this.loading = true;
+      // 请求接口
+      post1(me, searchFlow, {
+        keyword: query ? query : ""
+      })
+      .then(res => {
+        console.log("请求到的数据：", res);
 
-        // 请求接口
-        post1(me, searchFlow, {
-          keyword: query
-        })
-          .then(res => {
-            console.log("请求到的数据：", res);
-
-            this.loading = false;
-            if (res && res.code == 0) {
-              // 处理数据
-              let newArr = res.data.map(item => {
-                return {
-                  value: item.id,
-                  label: `流程名称：${item.name} --- 版本： ${item.version}`
-                };
-              });
-              this.options = newArr;
-            }
-          })
-          .catch(err => {
-            console.error("搜索异常：", err);
+        if (res && res.code == 0) {
+          // 处理数据
+          let newArr = res.data.map(item => {
+            return {
+              value: item.id,
+              label: item.name
+            };
           });
-      } else {
-        this.options = [];
-      }
+          // 处理过的数据（放在组件上显示用的）
+          this.options = newArr;
+
+          // 所有数据
+          this.optionsArr = res.data;
+        }
+      })
+      .catch(err => {
+        console.error("搜索异常：", err);
+      });
+
     },
 
-    // 更新流程绑定的数据到服务器
-    updateFlowBindData() {
-      const k1 = this.$refs.tree.getHalfCheckedKeys(); // 半选
-      const k2 = this.$refs.tree.getCheckedKeys(); // 全选
-
-      console.log("tree选中的状态：", "半选：", k1, "全选：", k2);
-      // 合并
-      const selectKeys = [...k1, ...k2];
-      // 转换成字符串
-      const selectStr = selectKeys.join(",");
-      this.selectProject = selectStr;
-      // 请求服务器
-    },
-
-    // 取消
+    // 取消(返回上一层)
     cancelFlow() {
-      console.log("取消");
-      // 跳转
-      this.$router.push({path: "/flowdeclare"})
+      this.$router.push({ path: "/flowdeclare" });
     },
 
     submitFlow(ruleForm) {
-      console.log("提交");
+      let me = this;
+      this.bindFlow.project = this.$refs.tree.getCheckedKeys();
+
       this.$refs[ruleForm].validate(valid => {
         if (valid) {
-          alert("submit!");
+          // alert("正在开发中...!");
+          // 发送请求
+
+          const k1 = this.$refs.tree.getHalfCheckedKeys(); // 半选(也就是父节点)
+          const k2 = this.$refs.tree.getCheckedKeys(); // 全选（选择的每一个节点）
+
+          console.log("tree选中的状态：", "半选：", k1, "全选：", k2);
+          // 合并
+          const selectKeys = [...k1, ...k2];
+          // 转换成字符串
+          const selectStr = selectKeys.join(",");
+          // this.selectProject = selectStr; // 保存到data中
+
+          // console.error("el-tree选中那些数据：", selectStr);
+
+          console.log(
+            "当前选中的数据：",
+            "选择那些项目：",
+            selectKeys,
+            "选择哪个flowId：",
+            this.bindFlow.flowSearch
+          );
+
+  
+
+          post1(me, submitDeclaration, {
+            ids: selectStr,
+            flowId: this.bindFlow.flowSearch
+          })
+            .then(res => {
+              console.log("提交申报流程的数据：", res);
+              if (res && res.code == 1) {
+                this.$message.success(res.data || "申报流程绑定成功");
+                setTimeout(() => {
+                  this.$router.push({ path: "/flowdeclare" });
+                }, 1500);
+              } else {
+                this.$message.success(
+                  res.data || "申报流程绑定失败，请稍后再试"
+                );
+                setTimeout(() => {
+                  this.$router.push({ path: "/flowdeclare" });
+                }, 1500);
+              }
+            })
+            .catch(err => {
+              console.error("提交申报流程错误：", err);
+            });
         } else {
-          console.log("error submit!!");
+          // console.log("error submit!!"); // 校验不通过
+          me.$message({
+            message: "请输入必填信息",
+            type: "warning"
+          });
+
           return false;
         }
       });
     }
   },
   computed: {},
-  watch: {},
-  created() {},
+  watch: {
+    // 监听流程搜索，赋值版本名称和版本号
+    "bindFlow.flowSearch": function(newVal, oldVal) {
+      console.log("新的数据：", newVal);
+      // 替换：
+      if (newVal === oldVal) return;
+
+      if (newVal) {
+        let currentObj = this.optionsArr.find(item => {
+          return item.id == newVal;
+        });
+
+        console.log("流程搜索中，选择的那一个：", currentObj);
+
+        // 替换：
+        if (currentObj) {
+          this.bindFlow.flowName = currentObj.name;
+          this.bindFlow.flowEdition = currentObj.version;
+        }
+      }
+    }
+  },
+  created() {
+    // 获取本地数据:
+
+    bus.$off("bindFlowScope");
+    bus.$on("bindFlowScope", item => {
+      console.log("传递过来的数据：", item);
+      if (item) {
+        // 替换，并且判断是否可以进行编辑：
+        this.bindFlow = {
+          flowSearch: item.flowName,
+          flowName: item.flowName,
+          flowEdition: item.flowVersion
+        };
+      }
+    });
+  },
   mounted() {
     this.getDeclarationProject();
+    this.remoteMethod();
+
+    // all
+    // Axios.all([this.getDeclarationProject(), this.remoteMethod()])
+    //   .then(
+    //     Axios.spread((oneDate, twoDate) => {
+    //       console.error("axios.all得到的数据：", oneDate, twoDate);
+    //       if (oneDate && oneDate.code == 1) {
+    //         this.flowProjectData = oneDate.data.zcProjects;
+    //       } else {
+    //         console.log("读取异常：", oneDate.msg);
+    //       }
+
+    //       if (twoDate && twoDate.code == 0) {
+    //         // 处理数据
+    //         let newArr = twoDate.data.map(item => {
+    //           return {
+    //             value: item.id,
+    //             label: item.name
+    //           };
+    //         });
+    //         // 处理过的数据（放在组件上显示用的）
+    //         this.options = newArr;
+
+    //         // 所有数据
+    //         this.optionsArr = twoDate.data;
+    //       }
+    //     })
+    //   )
+    //   .catch(err => {
+    //     console.error("axios.all 获取异常：", err);
+    //   });
+  
+  
+      //查看 编辑（el-tree的处理）
+      // 1. 先获取当前数据的二级id，不需要获取一级的id（因为选择一级的话，会默认吧他对应的二级都选择了）
+      // 2. 拿到二级id后，在el-tree上勾选回显
+      // el-tree有一个属性：default-checked-keys ---> 给一个数组，默认勾选相关节点
+      // this.defaultCheckedArr = 'xxx'
   }
 };
 </script>
@@ -298,9 +440,10 @@ export default {
   overflow-y: visible;
 }
 
-.search {
+#search {
   display: flex;
-  padding: 20px 0;
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
 .form {

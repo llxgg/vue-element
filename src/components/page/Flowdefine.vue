@@ -103,7 +103,7 @@
       </div>
 
       <!-- 表格 -->
-      <div style="margin-top: 8px;" id='el__table'>
+      <div style="margin-top: 8px;" id="el__table">
         <el-table
           :data="tableData"
           min-height="250"
@@ -117,8 +117,8 @@
           <el-table-column type="selection" width="70" :show-overflow-tooltip="true"></el-table-column>
           <el-table-column label="序号" width="70" type="index"></el-table-column>
 
-          <el-table-column prop="flowName" label="流程名称" width="180"></el-table-column>
-          <el-table-column prop="flowCode" label="流程编码" width="150"></el-table-column>
+          <el-table-column prop="flowName" label="流程名称" width="220"></el-table-column>
+          <el-table-column prop="flowCode" label="流程编码" width="220"></el-table-column>
 
           <el-table-column prop="flowVersion" label="流程版本" width="100"></el-table-column>
 
@@ -148,16 +148,16 @@
               <el-button size="mini" type="danger" @click="handleRemove(scope.row)">删除</el-button>-->
 
               <el-link
-                style="margin-right:22px;color:#1ABC9C;"
+                style="margin-right:22px;color:#409EFF;"
                 :underline="false"
                 @click="handleSee(scope.row)"
               >查看</el-link>
               <el-link
-                style="margin-right:22px;color:#1ABC9C;"
+                style="margin-right:22px;color:#409EFF;"
                 :underline="false"
                 @click="handleEdit(scope.row)"
               >编辑</el-link>
-              <el-link style="color:#1ABC9C;" :underline="false" @click="handleRemove(scope.row)">删除</el-link>
+              <el-link style="color:#409EFF;" :underline="false" @click="handleRemove(scope.row)">删除</el-link>
             </template>
           </el-table-column>
         </el-table>
@@ -168,7 +168,7 @@
           @current-change="handleCurrentChange"
           :current-page="pagenum"
           :page-size="pagesize"
-          :page-sizes="[5, 10, 15]"
+          :page-sizes="[10, 20, 50]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
           style="margin-top: 10px;width:100%;overflow:hidden;"
@@ -254,7 +254,7 @@ export default {
       ],
 
       //  排序方式
-       sortRanks: [
+      sortRanks: [
         {
           value: "asc",
           label: "时间升序"
@@ -267,7 +267,7 @@ export default {
 
       tableData: [], // 表格数据
       pagenum: 1, // 当前页码
-      pagesize: 5, // 每页多少条
+      pagesize: 10, // 每页多少条
       total: 0, // 总条数
 
       // 日期处理（选择的结束日期不能小于开始日期）
@@ -325,11 +325,13 @@ export default {
     clearFlowName() {
       this.screenData.name = "";
       // 从新请求
+      this.pagenum = 1;
       this.getTableData();
     },
     clearFlowCode() {
       this.screenData.code = "";
       // 从新请求
+      this.pagenum = 1;
       this.getTableData();
     },
 
@@ -346,29 +348,12 @@ export default {
     },
 
     // 按要求查询数据：
-    handleQueryResult() {
-      console.log("需要查询查询那些信息：", this.screenData);
-    },
+    // handleQueryResult() {
+    //   console.log("需要查询查询那些信息：", this.screenData);
+    // },
 
     //获取表格数据
     getTableData(page) {
-      //       this.tableData = [
-      //   {
-      //     code: "123456",
-      //     declareName: "东莞市高端人才认定及个人所得税补贴",
-      //     project: "人才补贴",
-      //     flowName: "境外人才补贴申领",
-      //     status: 1
-      //   },
-      //   {
-      //     code: "66896",
-      //     declareName: "东莞市高端人才认定及个人所得税补贴",
-      //     project: "人才补贴",
-      //     flowName: "境外人才补贴申领",
-      //     status: 2
-      //   }
-      // ];
-
       let me = this;
       let startTime = me.screenData.startDate
         ? timestampYMD(me.screenData.startDate)
@@ -402,16 +387,16 @@ export default {
       //   me.pagesize
       // );
 
-      let pagenum = page || this.pagenum
-
-      console.warn('=======pagenum=========:',pagenum);
+      let pagenum = page || this.pagenum;
+      console.error("当前准备请求的页码是：", pagenum);
+      this.pagenum = pagenum;
 
       // 请求数据....
       post1(me, getFlowData, {
-        flowName: name,
-        flowCode: code,
-        startTime: startTime,
-        endTime: endTime,
+        likeALL_flow_Name: name,
+        likeALL_flow_code: code,
+        gtString_CREATE_TIME: startTime,
+        ltString_CREATE_TIME: endTime,
         orderType: sortOrder,
         limit: this.pagesize,
         page: pagenum
@@ -439,17 +424,22 @@ export default {
       //   startDate: "",
       //   endDate: ""
       // };
+      console.log('是否需要重置：',me.screenData);
+      if (
+        me.screenData.name !== "" ||
+        me.screenData.code !== "" ||
+        me.screenData.startDate !== "" ||
+        me.screenData.endDate !== ""
+      ) {
+        me.screenData.name = "";
+        me.screenData.code = "";
+        me.screenData.startDate = "";
+        me.screenData.endDate = "";
 
-      me.screenData.name = "";
-      me.screenData.code = "";
-      me.screenData.startDate = "";
-      me.screenData.endDate = "";
-
-      me.screenData.allDate = "";
-
-      console.log("重置查询后的查询要求是：", me.screenData);
-      // 重新请求数据炫染
-      me.getTableData();
+        console.log("重置查询后的查询要求是：", me.screenData);
+        // 重新请求数据炫染
+        me.getTableData();
+      }
     },
 
     // 批量删除
@@ -495,13 +485,13 @@ export default {
             console.log("批量删除的结果：", res);
             if (res && res.code == 0) {
               this.$message.success(res.msg || "批量删除成功");
-
-             // 重新请求表格
-                this.getTableData();
-
+              this.deleteFlowArr = []; // 重置
+              // 重新请求表格
+              this.getTableData();
             } else {
               // 重新请求表格
               // this.getTableData();
+              this.deleteFlowArr = []; // 重置
               this.$message.error(res.msg || "批量删除失败，请稍后再试");
             }
           })
@@ -517,6 +507,7 @@ export default {
     // 查看
     handleSee(scope) {
       console.log("查看那个流程的数据：", scope);
+
       if (scope) {
         const flowId = scope.flowId;
         this.$router.push({
@@ -627,6 +618,6 @@ export default {
 }
 
 #el__table >>> .el-checkbox__inner {
-    margin-left: 0;
+  margin-left: 0;
 }
 </style>

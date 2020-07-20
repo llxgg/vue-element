@@ -70,8 +70,6 @@
           ></el-option>
         </el-select>-->
 
- 
-
         <!--  -->
         <div class="screen-btn">
           <el-button type="primary" style="width: 80px;" @click="getTableData">查询结果</el-button>
@@ -93,8 +91,7 @@
             ></el-option>
           </el-select>
         </div>
-      </div> -->
-
+      </div>-->
 
       <!-- 表格 -->
       <div style="margin-top: 8px;">
@@ -110,17 +107,17 @@
           <el-table-column label="序号" width="80" type="index"></el-table-column>
 
           <el-table-column prop="nodeName" label="环节名称" width="220"></el-table-column>
-          <el-table-column prop="executeUserName" label="执行人" width="150"></el-table-column>
+          <el-table-column prop="executeUserName" label="执行人" width="200"></el-table-column>
 
-          <el-table-column prop="executeTime" label="执行时间">
+          <el-table-column prop="executeTime" label="执行时间" width='230'>
             <!-- <template slot-scope="scope">
               <span>{{formatDate(scope.row.create_time, "yy-mm-dd hh:mm:ss")}}</span>
             </template>-->
           </el-table-column>
 
-              <el-table-column prop="note" label="执行意见"></el-table-column>
+          <el-table-column prop="note" label="执行意见" width="220"></el-table-column>
 
-          <el-table-column prop="remark" label="备注" width="230"></el-table-column>
+          <el-table-column prop="remark" label="备注" ></el-table-column>
         </el-table>
 
         <!-- 分页 -->
@@ -129,7 +126,7 @@
           @current-change="handleCurrentChange"
           :current-page="pagenum"
           :page-size="pagesize"
-          :page-sizes="[5, 10, 15]"
+          :page-sizes="[10, 20, 50]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
           style="margin-top: 10px;width:100%;overflow:hidden;"
@@ -142,7 +139,7 @@
             <el-button @click="showDelete = false">取 消</el-button>
             <el-button type="primary" @click="deleteFlow">确 定</el-button>
           </span>
-        </el-dialog> -->
+        </el-dialog>-->
       </div>
     </div>
   </div>
@@ -150,8 +147,8 @@
 
 <script>
 import { timestamp, timestampYMD } from "../../util/date.js";
-import { post,post1 } from "../../util/http.js";
-import { getProcessInfo } from "../../util/api.js";
+import { post, post1 } from "../../util/http.js";
+import { getProcessInfo, listNoteAndExecutors } from "../../util/api.js";
 
 export default {
   components: {},
@@ -196,15 +193,14 @@ export default {
           label: "非常好"
         }
       ],
-
+      ywlsh:"", // 业务流水号
       tableData: [], // 表格数据
       pagenum: 1, // 当前页码
-      pagesize: 5, // 每页多少条
-      total: 100, // 总条数
+      pagesize: 10, // 每页多少条
+      total: 0 // 总条数
     };
   },
   methods: {
-
     // 设置表格内容居中
     setHeaderStyle() {
       return "text-align:center";
@@ -219,13 +215,12 @@ export default {
       return timestamp(value, format);
     },
 
-
     // 清空输入的流程名称
     clearLinkName() {
       this.screenData.name = "";
-      this.getTableData()
+      this.pagenum = 1;
+      this.getTableData();
     },
-
 
     // 分页
     handleSizeChange(val) {
@@ -239,20 +234,66 @@ export default {
       this.getTableData();
     },
 
+    getlistNoteAndExecutors() {
+      let me = this;
+      post1(me, listNoteAndExecutors, {
+        ywlsh: this.$route.query.ywlsh
+      })
+        .then(res => {
+          console.log("获取执行人’执行意见的数据：", res);
+          if (res && res.code == 1) {
+            let { notes, executors } = res.data;
+            // 处理执行人数据：
+            executors = executors.map(item => {
+              return {
+                value: item.name,
+                label: item.name
+              };
+            });
+            this.executors = executors; // 执行人
 
+            // 处理执行意见数据：
+            notes = notes.map((item, index) => {
+              return {
+                value: index,
+                label: item
+              };
+            });
+            this.executorIdeas = notes; // 执行意见
+          }
+        })
+        .catch(err => {
+          console.log("获取执行人、执行意见异常：", err);
+        });
+    },
 
     //获取表格数据
-    getTableData(ywlsh) {
+    getTableData() {
       let me = this;
       let name = me.screenData.name ? me.screenData.name.trim() : "";
 
-      console.log("输入的数据：",name, me.screenData.executor, me.screenData.executorIdea);
+      let noteObj = me.executorIdeas[me.screenData.executorIdea];
+      let noteName = ""
+      if(noteObj){
+        noteName = noteObj.label;
+      }
+
+      console.log(
+        "输入的数据：",
+        name,
+        me.screenData.executor,
+        noteName
+      );
+
+      
 
       post(me, getProcessInfo, {
         limit: me.pagesize,
         page: me.pagenum,
-        // likeALL_flow_Name: name,
-        "ywlsh": ywlsh,
+        ywlsh: me.ywlsh,
+        nodeName: name,
+        executeUserName: me.screenData.executor,
+        note: noteName
       }).then(res => {
         console.log("申报流程得到的数据：", res);
         if (res && res.code == 1) {
@@ -260,40 +301,47 @@ export default {
           me.tableData = data;
           me.total = totalCount;
         }
-      });
+      }).catch(err => {
+        console.error('获取过程信息异常：',err);
+      })
     },
 
     // 重置查询要求
     resetQuery() {
       let me = this;
-      me.screenData = {
-        name: "",
-        code: "",
-        status: "",
-        startDate: "",
-        endDate: ""
-      };
-      console.log("重置查询后的查询要求是：", me.screenData);
-      // 重新请求数据炫染
-      me.getTableData();
-    },
+      console.log("是否需要重置：", me.screenData);
+      if (
+        me.screenData.name !== "" ||
+        me.screenData.executor !== "" ||
+        me.screenData.executorIdea !== ""
+      ) {
+        me.screenData.name = ""; // 环节名称
+        me.screenData.executor = ""; // 执行人
+        me.screenData.executorIdea = ""; // 执行意见
 
-
-
+        console.log("重置查询后的查询要求是：", me.screenData);
+        // 重新请求数据炫染
+        me.getTableData();
+      }
+    }
   },
 
   computed: {},
   watch: {},
 
   created() {
+    // 拿到对应的业务流水号：
     let ywlsh = this.$route.query.ywlsh;
-    console.log('=====得到的业务流水号：======',ywlsh);
-    this.getTableData(ywlsh);
+    this.ywlsh = ywlsh;
+    console.log("=====得到的业务流水号：======", ywlsh);
+    
   },
 
   mounted() {
-    // 获取表格数据
+    // 获取数据：
     this.getTableData();
+    // 获取执行人、执行意见
+    this.getlistNoteAndExecutors();
   }
 };
 </script>

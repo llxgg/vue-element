@@ -159,24 +159,32 @@
             </template>-->
           </el-table-column>
 
-          <el-table-column label="操作" width="300">
+          <el-table-column label="操作" width="260">
             <template slot-scope="scope">
               <el-link
-                style="margin-right:22px;color:#1ABC9C;"
+                style="margin-right:22px;color:#409EFF;"
                 :underline="false"
                 @click="handleSee(scope.row)"
               >查看</el-link>
+
+              <!--  编辑的处理：
+                :style="{'opacity': (scope.row.grantStatus == 1) && (scope.row.publishStatus == 1) ? '0.5' : '1'}"
+                :disabled="(scope.row.grantStatus == 1) && (scope.row.publishStatus == 1) ? true : false" -->
               <el-link
-                style="margin-right:22px;color:#1ABC9C;"
+                class="el__link-deit"
                 :underline="false"
                 @click="handleEdit(scope.row)"
               >编辑</el-link>
+
+              <!-- 未授权的不可发布 -->
               <el-link
-                style="margin-right:22px;color:#1ABC9C;"
+                :disabled="(scope.row.grantStatus == 0) ? true : false"
+                :style="{'opacity': (scope.row.grantStatus == 0) ? '0.5' : '1'}"
+                class="el__link-deit"
                 :underline="false"
                 @click="handleSend(scope.row)"
               >发布</el-link>
-              <el-link style="color:#1ABC9C;" :underline="false" @click="handleRemove(scope.row)">删除</el-link>
+              <el-link style="color:#409EFF;" :underline="false" @click="handleRemove(scope.row)">删除</el-link>
 
               <!-- <el-button size="mini" style="margin-right:6px;" @click="handleSee(scope.row)">查看</el-button>
               <el-button size="mini" style="margin-right:6px;" @click="handleEdit(scope.row)">编辑</el-button>
@@ -197,7 +205,7 @@
           @current-change="handleCurrentChange"
           :current-page="pagenum"
           :page-size="pagesize"
-          :page-sizes="[5, 10, 15]"
+          :page-sizes="[10, 20, 50]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
           style="margin-top: 10px;width:100%;overflow:hidden;"
@@ -229,6 +237,7 @@ import { post, post1 } from "../../util/http.js";
 import {
   getDeclareRoleList,
   delDeclaration,
+  deleteGrant,
   declareListProject
 } from "../../util/api.js";
 
@@ -277,12 +286,12 @@ export default {
       // 发布状态
       sendStatues: [
         {
-          value: 1,
-          label: "暂存"
+          value: 0,
+          label: "未发布"
         },
         {
-          value: 2,
-          label: "提交"
+          value: 1,
+          label: "已发布"
         }
       ],
 
@@ -299,8 +308,8 @@ export default {
       ],
       tableData: [], // 表格数据
       pagenum: 1, // 当前页码
-      pagesize: 5, // 每页多少条
-      total: 100, // 总条数
+      pagesize: 10, // 每页多少条
+      total: 0, // 总条数
 
       // 日期时间处理
       /* start 开始时间小于今天,结束时间不能大于开始时间 */
@@ -450,6 +459,8 @@ export default {
       // );
 
       let pagenum = page || this.pagenum;
+      console.error("当前准备请求的页码是：", pagenum);
+      this.pagenum = pagenum;
 
       post1(me, getDeclareRoleList, {
         limit: me.pagesize,
@@ -475,22 +486,28 @@ export default {
     resetQuery() {
       let me = this;
 
-      me.screenData.name = ""; // 流程名称
-      me.screenData.project = ""; // 所属项目
-      me.screenData.roleStatus = ""; // 授权状态
-      me.screenData.sendStatus = ""; // 发布状态
+      console.log("是否需要重置：", me.screenData);
+      if (
+        me.screenData.name !== "" ||
+        me.screenData.project !== "" ||
+        me.screenData.roleStatus !== "" ||
+        me.screenData.sendStatus !== "" ||
+        me.screenData.startDate !== "" ||
+        me.screenData.endDate !== ""
+      ) {
+        me.screenData.name = ""; // 流程名称
+        me.screenData.project = ""; // 所属项目
+        me.screenData.roleStatus = ""; // 授权状态
+        me.screenData.sendStatus = ""; // 发布状态
 
-      me.screenData.startDate = ""; // 开始时间
-      me.screenData.endDate = ""; // 结束时间
-      me.screenData.sortOrder = ""; // 排序方式
+        me.screenData.startDate = ""; // 开始时间
+        me.screenData.endDate = ""; // 结束时间
+        // me.screenData.sortOrder = ""; // 排序方式
 
-      console.log(
-        "重置查询后的查询要求是：",
-        me.screenData,
-        me.screenData.sortOrder
-      );
-      // 重新请求数据炫染
-      me.getTableData();
+        console.log("重置查询后的查询要求是：", me.screenData);
+        // 重新请求数据炫染
+        me.getTableData();
+      }
     },
 
     // 表格事件
@@ -498,33 +515,53 @@ export default {
       console.log("查看那个：", scope);
       this.$router.push({
         path: "/add_flow",
-        query: { flag: 2, Id: scope.FLOW_ID }
+        query: {
+          flag: 2,
+          flowId: scope.FLOW_ID,
+          declaId: scope.declarationFlowId,
+          flowName: scope.declarationName,
+          declaId: scope.declarationId
+        }
       });
     },
     handleEdit(scope) {
       console.log("编辑那个：", scope);
       this.$router.push({
         path: "/add_flow",
-        query: { flag: 2, Id: scope.FLOW_ID }
+        query: {
+          flag: 2,
+          flowId: scope.FLOW_ID,
+          declaId: scope.declarationFlowId,
+          flowName: scope.declarationName,
+          declaId: scope.declarationId
+        }
       });
     },
     handleSend(scope) {
       console.log("发布那个：", scope);
+      this.$router.push({
+        path: "/add_flow",
+        query: {
+          flag: 2,
+          flowId: scope.FLOW_ID,
+          declaId: scope.declarationFlowId,
+          flowName: scope.declarationName
+        }
+      });
     },
     handleRemove(scope) {
-      console.log("xxxxxxxx", scope);
+      console.log("当前要删除的scope数据：", scope);
       // 打开弹出框
       this.showDelete = true;
-      this.removeFlowId = scope.declarationId;
+      this.removeFlowId = scope.declarationFlowId;
     },
 
     // 确定删除当前流程
     deleteFlow() {
       let me = this;
-      // 删除请求：.......
       console.log("要删除的流程id：", me.removeFlowId);
       // 请求数据....
-      post1(me, delDeclaration, {
+      post1(me, deleteGrant, {
         declarationFlowId: me.removeFlowId
       }).then(res => {
         console.log("得到的数据：", res);
@@ -541,6 +578,7 @@ export default {
       // 隐藏弹出框
       this.showDelete = false;
     },
+
     // 点击实例数，跳转到实例
     goPageToInstan(scope) {
       let flowId = scope.FLOW_ID;
@@ -588,5 +626,10 @@ export default {
 
 #el__table >>> .el-checkbox__inner {
   margin-left: 0;
+}
+
+.el__link-deit {
+  margin-right: 22px;
+  color: #409eff !important;
 }
 </style>

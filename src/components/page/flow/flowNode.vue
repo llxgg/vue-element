@@ -5,7 +5,8 @@
          @mouseenter="showDelete"
          @mouseleave="hideDelete"
          @mouseup="changeNodeSite"
-         @click.stop="editNode">
+         @click.stop="editNode()"
+      >
         <!-- <div class="node-titel">
             <div class="node-icon" v-show="mouseEnter">
                 <i class="el-icon-delete" @@click.stop="deleteNode"></i>
@@ -32,9 +33,10 @@
         },
         data() {
             return {
-                mouseEnter: false
+                mouseEnter: false,
+               
             }
-        },
+        }, 
         computed: {
             // 节点容器样式
             flowNodeContainer: {
@@ -66,7 +68,7 @@
                 this.$emit('delete-node', this.node.id)
             },
             // 编辑节点
-            editNode() {
+            editNode(index) {
                 this.$emit('edit-node', this.node.id)
             },
             // 鼠标进入
@@ -84,7 +86,11 @@
                     left: this.$refs.node.style.left,
                     top: this.$refs.node.style.top,
                 })
-            }
+            },
+            // changeColor(index){
+            // this.isShow = index
+            // console.log(this.isShow,index)
+            // },
         }
     }
 </script>
@@ -135,4 +141,9 @@
     opacity: 0;
     cursor: crosshair;
   }
+
+  .borderclass{
+      border:2px solid red;
+}
+
 </style>

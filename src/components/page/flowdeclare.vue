@@ -133,10 +133,10 @@
           <el-table-column type="selection" width="70" :show-overflow-tooltip="true"></el-table-column>
           <el-table-column label="序号" width="70" type="index"></el-table-column>
 
-          <el-table-column prop="declarationName" label="申报方向" width="130"></el-table-column>
-          <el-table-column prop="code" label="申报编码" width="130"></el-table-column>
-          <el-table-column prop="projectName" label="所属项目" width="150"></el-table-column>
-          <el-table-column prop="flowName" label="流程名称" width="200"></el-table-column>
+          <el-table-column prop="declarationName" label="申报方向" width="120"></el-table-column>
+          <el-table-column prop="code" label="申报编码" width="120"></el-table-column>
+          <el-table-column prop="projectName" label="所属项目" width="130"></el-table-column>
+          <el-table-column prop="flowName" label="流程名称" width="180"></el-table-column>
           <el-table-column prop="flowVersion" label="流程版本" width="80"></el-table-column>
 
           <!-- <el-table-column prop="grantStatus" label="授权状态" width="80">
@@ -151,13 +151,19 @@
             </template>
           </el-table-column>-->
 
-          <el-table-column prop="createTime" label="创建时间">
+          <el-table-column prop="createTime" label="创建时间" width="140">
             <!-- <template slot-scope="scope">
               <span>{{formatDate(scope.row.create_time, "yy-mm-dd hh:mm:ss")}}</span>
             </template>-->
           </el-table-column>
 
-          <el-table-column label="操作" width="230">
+          <el-table-column label="绑定时间" width="140">
+            <template
+              slot-scope="scope"
+            >{{scope.row.updateTime.includes('.') ? scope.row.updateTime.substr(0,scope.row.updateTime.indexOf('.')) : scope.row.updateTime}}</template>
+          </el-table-column>
+
+          <el-table-column label="操作" width="200">
             <template slot-scope="scope">
               <!-- <el-button
                 size="mini"
@@ -176,16 +182,16 @@
               <el-button size="mini" type="danger" @click="handleRemove(scope.row)">删除</el-button>-->
 
               <el-link
-                style="margin-right:22px;color:#1ABC9C;"
+                style="margin-right:22px;color:#409EFF;"
                 :underline="false"
                 @click="handleSee(scope.row)"
               >查看</el-link>
               <el-link
-                style="margin-right:22px;color:#1ABC9C;"
+                style="margin-right:22px;color:#409EFF;"
                 :underline="false"
                 @click="handleEdit(scope.row)"
               >编辑</el-link>
-              <el-link style="color:#1ABC9C;" :underline="false" @click="handleRemove(scope.row)">删除</el-link>
+              <el-link style="color:#409EFF;" :underline="false" @click="handleRemove(scope.row)">删除</el-link>
             </template>
           </el-table-column>
         </el-table>
@@ -196,7 +202,7 @@
           @current-change="handleCurrentChange"
           :current-page="pagenum"
           :page-size="pagesize"
-          :page-sizes="[5, 10, 15]"
+          :page-sizes="[10, 20, 50]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
           style="margin-top: 10px;width:100%;overflow:hidden;"
@@ -230,7 +236,9 @@ import { post, post1 } from "../../util/http.js";
 import {
   getDeclareList,
   declareListProject,
-  submitDeclaration
+  submitDeclaration,
+  bindDeclarationProject,
+  delDeclaration
 } from "../../util/api.js";
 
 export default {
@@ -280,8 +288,8 @@ export default {
 
       tableData: [], // 表格数据
       pagenum: 1, // 当前页码
-      pagesize: 5, // 每页多少条
-      total: 100, // 总条数
+      pagesize: 10, // 每页多少条
+      total: 0, // 总条数
 
       // 日期时间处理
       /* start 开始时间小于今天,结束时间不能大于开始时间 */
@@ -409,7 +417,7 @@ export default {
       );
 
       let pagenum = page || this.pagenum;
-      console.warn("=======pagenum=========:", pagenum);
+      console.error("当前准备请求的页码是：", pagenum);
       this.pagenum = pagenum;
 
       post1(me, getDeclareList, {
@@ -438,49 +446,91 @@ export default {
     // 重置查询要求
     resetQuery() {
       let me = this;
+      console.log("是否需要重置：", me.screenData);
+      if (
+        me.screenData.name !== "" ||
+        me.screenData.project !== "" ||
+        me.screenData.startDate !== "" ||
+        me.screenData.endDate !== ""
+      ) {
+        me.screenData.name = "";
+        me.screenData.project = "";
+        me.screenData.startDate = "";
+        me.screenData.endDate = "";
 
-      me.screenData.name = "";
-      me.screenData.project = "";
-      me.screenData.startDate = "";
-      me.screenData.endDate = "";
-
-      console.log(
-        "重置查询后的查询要求是：",
-        me.screenData,
-        me.screenData.sortOrder
-      );
-      // 重新请求数据炫染
-      me.getTableData();
+        console.log("重置查询后的查询要求是：", me.screenData);
+        // 重新请求数据炫染
+        me.getTableData();
+      }
     },
 
     // 表格事件
     handleSee(scope) {
       console.log("查看那个", scope);
-
-      // 吧需要的信息保存到本地
-      // localStorage.setItem("bindFlowScope", JSON.stringify(scope));
-      scope.editFlag = false;
-      bus.$emit("bindFlowScope", scope);
-
-      this.$router.push({ path: "/bind_flow" });
+      this.$router.push({
+        path: "/bind_flow",
+        query: { isEdit: 1, bindFlowId: scope.declarationFlowId }
+      });
     },
     handleEdit(scope) {
       console.log("编辑那个", scope);
-      this.$router.push({ path: "/bind_flow" });
+      this.$router.push({
+        path: "/bind_flow",
+        query: { isEdit: 2, bindFlowId: scope.declarationFlowId }
+      });
     },
     handleRemove(scope) {
-      return console.log("当前要删除的id：", scope);
-      this.deleteFlowId = scope.declarationId;
+      console.log("当前要删除的id：", scope);
+      this.deleteFlowId = scope.declarationFlowId;
       // 打开弹出框
       this.showDelete = true;
     },
 
-    // 确定删除当前流程(还没做)
+    // 确定删除当前流程
     deleteFlow() {
-      // 删除请求：.......
-      alert("正在开发中...");
+      let me = this;
+      console.log("要删除的流程id：", me.deleteFlowId);
+      // 请求数据....
+      post1(me, delDeclaration, {
+        declarationFlowId: me.deleteFlowId
+      }).then(res => {
+        console.log("得到的数据：", res);
+        if (res && res.code == 1) {
+          // 重新炫染
+          me.getTableData();
+          // 提示
+          me.$message.success("当前流程删除成功");
+        } else {
+          me.$message.error(res.msg || "当前流程删除失败，请稍后再试");
+        }
+      });
+
       // 隐藏弹出框
       this.showDelete = false;
+    },
+
+
+
+    // 获取申报项目的数据，并保存到localStorage中
+    getDeclareProjectData() {
+      let me = this;
+      post1(me, bindDeclarationProject, {
+        projectName: ""
+      })
+        .then(res => {
+          console.log("获取绑定项目的数据：", res);
+          if (res && res.code == 1) {
+            let flowProjectData = res.data.zcProjects;
+            // 保存到本地：
+            localStorage.setItem(
+              "flowProJectData",
+              JSON.stringify(flowProjectData)
+            );
+          }
+        })
+        .catch(err => {
+          console.log("获取绑定项目数据异常：", err);
+        });
     }
   },
 
@@ -502,6 +552,8 @@ export default {
     this.getTableData();
     // 获取所属项目的数据
     this.getDeclareProjectList();
+    // 获取绑定申报方向porject,并保持到localStorage中
+    this.getDeclareProjectData();
   }
 };
 </script>

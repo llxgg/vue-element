@@ -7,20 +7,20 @@
     size="mini"
   >
     <el-form-item label="ID">
-      <el-input disabled v-model="line.tranId"></el-input>
+      <el-input disabled v-model="line.Id" @blur="onInputBlur(line)"></el-input>
     </el-form-item>
     <el-form-item label="流转编号">
-      <el-input v-model="line.tranCode"></el-input>
+      <el-input v-model="line.tranCode" @blur="onInputBlur(line)" disabled></el-input>
     </el-form-item>
     <el-form-item label="流转名称">
-      <el-input v-model="line.tranName"></el-input>
+      <el-input v-model="line.label" @blur="onInputBlur(line)"></el-input>
     </el-form-item>
-    <el-form-item label="流转按钮">
+    <!-- <el-form-item label="流转按钮">
       <el-input v-model="line.tranBtn"></el-input>
-    </el-form-item>
-    <el-form-item label="备注">
-      <el-input v-model="line.Remark" type="textarea" :autosize="{ minRows: 2, maxRows: 4}"></el-input>
-    </el-form-item>
+    </el-form-item> -->
+    <!-- <el-form-item label="备注">
+      <el-input v-model="line.Remark" type="textarea" :autosize="{ minRows: 2, maxRows: 4}" @blur="onInputBlur(line)"></el-input>
+    </el-form-item> -->
   </el-form>
 </template>
 
@@ -61,7 +61,9 @@ export default {
         this.isUpdate = true;
       });
     },
-
+    onInputBlur(line){
+      this.$emit("line-save", this.line);
+    }
 
   }
 };

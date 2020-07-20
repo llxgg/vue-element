@@ -13,6 +13,7 @@ import "./assets/css/icon/iconfont.css"
 Vue.prototype.$axios = axios;
 let token ;
 axios.defaults.baseURL = 'https://app.zhiwuxuanlv.com';
+axios.defaults.timeout = 30000;
 axios.defaults.headers.common['token'] = token;
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=UTF-8';
 

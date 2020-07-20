@@ -46,7 +46,7 @@
 
         <!--  -->
         <div class="screen-btn">
-          <el-button type="primary" style="width: 80px;" @click="getTableData">查询结果</el-button>
+          <el-button type="primary" style="width: 80px;" @click="getTableData(1)">查询结果</el-button>
           <el-button style="width: 80px;margin-left: 10px;color:#409EFF;" @click="resetQuery">重置</el-button>
         </div>
       </div>
@@ -67,7 +67,7 @@
         </div>
       </div>
 
-      <div style="margin-top: 8px;" id='el__table'>
+      <div style="margin-top: 8px;" id="el__table">
         <el-table
           :data="tableData"
           min-height="350"
@@ -78,8 +78,8 @@
         >
           <el-table-column type="selection" width="70" :show-overflow-tooltip="true"></el-table-column>
           <el-table-column label="序号" width="70" type="index"></el-table-column>
-          <el-table-column prop="code" label="受理编号" width="120"></el-table-column>
-          <el-table-column prop="declarationName" label="申报方向名称" width='150'></el-table-column>
+          <el-table-column prop="YWLSH" label="受理编号" width="130"></el-table-column>
+          <el-table-column prop="declarationName" label="申报方向名称" width="150"></el-table-column>
           <el-table-column prop="projectName" label="所属项目" width="150"></el-table-column>
           <el-table-column prop="flowName" label="流程名称"></el-table-column>
 
@@ -111,7 +111,7 @@
           @current-change="handleCurrentChange"
           :current-page="pagenum"
           :page-size="pagesize"
-          :page-sizes="[5, 10, 15]"
+          :page-sizes="[10, 20, 50]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
           style="margin-top: 10px;width:100%;overflow:hidden;"
@@ -123,12 +123,14 @@
 <script>
 // import { timestamp, timestampYMD } from "../../util/date.js";
 import { post1, post } from "../../util/http.js";
+
 import { getInstanList, getProcessInfo } from "../../util/api.js";
 
 export default {
   components: {},
   data() {
     return {
+      flowId: "", // 传递过来的flowId
       // 筛选数据
       screenData: {
         code: "",
@@ -164,13 +166,17 @@ export default {
       sortRanks: [
         {
           value: "asc",
-          label: "时间排序"
+          label: "时间升序"
+        },
+        {
+          value: "desc",
+          label: "时间倒序"
         }
       ],
       tableData: [], // 表格数据
       pagenum: 1, // 当前页码
-      pagesize: 5, // 每页多少条
-      total: 100 // 总条数
+      pagesize: 10, // 每页多少条
+      total: 0 // 总条数
     };
   },
   methods: {
@@ -186,11 +192,14 @@ export default {
     clearFlowCode() {
       this.screenData.code = "";
       // 从新请求
+      this.pagenum = 1;
       this.getTableData();
     },
     // 删除输入的申报方向名称
     clearFlowDirection() {
       this.screenData.direction = "";
+      // 从新请求
+      this.pagenum = 1;
       this.getTableData();
     },
 
@@ -210,7 +219,15 @@ export default {
     handleFlowChart(scope) {
       console.log("流程图当前数据源", scope);
       const flowId = scope.flowId;
-      this.$router.push({ path: "/add_flow", query: { flag: 3, flowId: flowId } }); // 3 为流程实例
+      this.$router.push({
+        path: "/add_flow",
+        query: {
+          flag: 3,
+          flowId: flowId,
+          flowName: scope.declarationName,
+          ywlsh: scope.YWLSH
+        }
+      }); // 3 为流程实例
     },
 
     // 过程信息
@@ -223,24 +240,7 @@ export default {
     },
 
     //获取表格数据
-    getTableData(flowId) {
-      // this.tableData = [
-      //   {
-      //     code: "123456",
-      //     declareName: "东莞市高端人才认定及个人所得税补贴",
-      //     project: "人才补贴",
-      //     flowName: "境外人才补贴申领",
-      //     status: 1
-      //   },
-      //   {
-      //     code: "66896",
-      //     declareName: "东莞市高端人才认定及个人所得税补贴",
-      //     project: "人才补贴",
-      //     flowName: "境外人才补贴申领",
-      //     status: 2
-      //   }
-      // ];
-
+    getTableData(page) {
       let me = this;
 
       // 获取其他筛选数据
@@ -272,24 +272,31 @@ export default {
       );
 
       // 请求数据
+      let pagenum = page || me.pagenum;
+      console.error("当前准备请求的页码是：", pagenum);
+      me.pagenum = pagenum;
 
       post(me, getInstanList, {
         ywlsh: code, // 受理编码
         declarationName: direction, // 申报方向
         status: me.screenData.status, // 实例状态
         orderType: sortOrder, // 排序
-        current: me.pagenum,
+        current: pagenum,
         size: me.pagesize,
-        flowId: flowId // 流程授权中，跳过来的，如果有就加，没有就为空
-      }).then(res => {
-        console.log("流程实例得到的数据：", res);
+        flowId: me.flowId // 流程授权中，跳过来的，如果有就加，没有就为空
+      })
+        .then(res => {
+          console.log("流程实例得到的数据：", res);
 
-        if (res && res.code == 1) {
-          const { data, totalCount } = res;
-          me.tableData = data;
-          me.total = totalCount;
-        }
-      });
+          if (res && res.code == 1) {
+            const { data, totalCount } = res;
+            me.tableData = data;
+            me.total = totalCount;
+          }
+        })
+        .catch(err => {
+          console.log("请求流程实例接口异常：", err);
+        });
     },
 
     queryStatusName(status) {
@@ -312,13 +319,20 @@ export default {
     resetQuery() {
       let me = this;
 
-      me.screenData.code = "";
-      me.screenData.direction = ""; // 申报方向
-      me.screenData.status = ""; // 实例状态
+      console.log("是否需要重置：", me.screenData);
+      if (
+        me.screenData.code !== "" ||
+        me.screenData.direction !== "" ||
+        me.screenData.status !== ""
+      ) {
+        me.screenData.code = "";
+        me.screenData.direction = ""; // 申报方向
+        me.screenData.status = ""; // 实例状态
 
-      console.log("重置查询后的查询要求是：", me.screenData);
-      // 重新请求数据炫染
-      me.getTableData();
+        console.log("重置查询后的查询要求是：", me.screenData);
+        // 重新请求数据炫染
+        me.getTableData();
+      }
     }
   },
 
@@ -327,19 +341,17 @@ export default {
     "screenData.sortOrder": function(newVal, oldVal) {
       console.log("排序方式发生变化：", newVal, oldVal);
       // 发送请求
+      this.pagenum = 1;
       this.getTableData();
     }
   },
 
   created() {
     const flowId = this.$route.query.flowId || "";
-    console.log("xxxxxxxxxx", flowId);
-    if (flowId) {
-      this.getTableData(flowId);
-    } else {
-      // 获取表格数据
-      this.getTableData();
-    }
+    console.log("传递过来的id：", flowId);
+    this.flowId = flowId;
+    // 获取表格数据
+    this.getTableData();
   },
   mounted() {}
 };
@@ -358,6 +370,6 @@ export default {
 }
 
 #el__table >>> .el-checkbox__inner {
-    margin-left: 0;
+  margin-left: 0;
 }
 </style>

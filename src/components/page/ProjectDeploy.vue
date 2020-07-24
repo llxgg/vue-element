@@ -1,40 +1,26 @@
-<!-- 待审核政策 -->
+<!-- 项目配置 -->
 <template>
   <div>
     <!-- 面包屑 -->
     <div class="crumbs">
       <el-breadcrumb separator-class="el-icon-arrow-right" separator=">">
-        <el-breadcrumb-item>审核管理</el-breadcrumb-item>
-        <el-breadcrumb-item>待审核政策</el-breadcrumb-item>
+        <el-breadcrumb-item>项目管理</el-breadcrumb-item>
+        <el-breadcrumb-item>项目配置</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
 
     <!-- card -->
     <div class="container">
-      <div style="margin-bottom: 3px;font-weight:530;">政策审核</div>
+      <div style="margin-bottom: 3px;font-weight:530;">项目配置</div>
       <!-- 条件筛选 -->
       <div class="table-wrapper">
         <el-input
           v-model="screenData.name"
-          placeholder="请输入政策名称"
+          placeholder="请输入项目名称"
           style="width: 200px;"
           clearable
           @clear="clearPolicyName"
         ></el-input>
-
-        <!-- 政策分类 -->
-        <el-select
-          v-model="screenData.category"
-          style="width: 160px;margin-left: 10px;"
-          placeholder="政策分类"
-        >
-          <el-option
-            v-for="item in categorys"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          ></el-option>
-        </el-select>
 
         <!-- 发布部门 -->
         <el-select
@@ -49,6 +35,34 @@
             :value="item.value"
           ></el-option>
         </el-select>
+
+        <!-- 所属政策 -->
+        <el-select
+          v-model="screenData.policy"
+          style="width: 160px;margin-left: 10px;"
+          placeholder="所属政策"
+        >
+          <el-option
+            v-for="item in policys"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+
+        <!-- 发布状态 -->
+        <!-- <el-select
+          v-model="screenData.status"
+          style="width: 120px;margin-left: 10px;"
+          placeholder="发布状态"
+        >
+          <el-option
+            v-for="item in flowStatus"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>-->
 
         <!-- 创建时间 -->
         <div style="margin-left: 10px;">
@@ -69,6 +83,20 @@
           ></el-date-picker>
         </div>
 
+        <!-- 审核状态 -->
+        <el-select
+          v-model="screenData.examineStatus"
+          style="width: 110px;margin-left: 10px;"
+          placeholder="审核状态"
+        >
+          <el-option
+            v-for="item in examineStatues"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+
         <!--  -->
         <div class="screen-btn">
           <el-button type="primary" style="width: 80px;" @click="getTableData(1)">查询结果</el-button>
@@ -76,7 +104,28 @@
         </div>
       </div>
 
-  
+      <!-- 新增/排序 -->
+      <div class="table-wrapper">
+        <el-button type="primary" style="width: 100px;" @click="addPolicy">新增项目</el-button>
+
+        <div class="screen-btn">
+          <!--
+          <el-button
+            style="width: 80px;margin-right:20px;color:#409EFF;"
+            @click="deleteAllFlow"
+          >批量删除</el-button>-->
+
+          <el-select v-model="screenData.sortOrder" placeholder="排序方式" style="width: 120px;">
+            <el-option
+              v-for="item in sortRanks"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            ></el-option>
+          </el-select>
+        </div>
+      </div>
+
       <!-- 表格 -->
       <div style="margin-top: 8px;" id="el__table">
         <el-table
@@ -92,12 +141,13 @@
           <el-table-column type="selection" width="70" :show-overflow-tooltip="true"></el-table-column>
           <el-table-column label="序号" width="70" type="index"></el-table-column>
 
-          <el-table-column prop="flowName" label="政策名称" width="220"></el-table-column>
-          <el-table-column prop="flowCode" label="政策编码" width="220"></el-table-column>
+          <el-table-column prop="flowName" label="项目名称" width="220"></el-table-column>
+          <el-table-column prop="flowCode" label="项目编码" width="220"></el-table-column>
 
-          <el-table-column prop="flowVersion" label="发布部门" width="100"></el-table-column>
-          <el-table-column prop="flowVersion" label="政策分类" width="100"></el-table-column>
-          <el-table-column prop="flowVersion" label="行使层级" width="100"></el-table-column>
+          <el-table-column prop="flowVersion" label="申报方向" width="100"></el-table-column>
+
+          <el-table-column prop="flowCode" label="发布部门" width="100"></el-table-column>
+          <el-table-column prop="flowCode" label="所属政策" width="100"></el-table-column>
 
           <el-table-column prop="status" label="审核状态" width="100">
             <template slot-scope="scope">
@@ -107,13 +157,19 @@
 
           <el-table-column prop="createTime" label="创建时间"></el-table-column>
 
-          <el-table-column prop="flowId" label="操作" width="100">
+          <el-table-column prop="flowId" label="操作" width="180">
             <template slot-scope="scope">
               <el-link
                 style="margin-right:22px;color:#409EFF;"
                 :underline="false"
-                @click="handleExamine(scope.row)"
-              >审核</el-link>
+                @click="handleSee(scope.row)"
+              >查看</el-link>
+              <el-link
+                style="margin-right:22px;color:#409EFF;"
+                :underline="false"
+                @click="handleEdit(scope.row)"
+              >编辑</el-link>
+              <el-link style="color:#409EFF;" :underline="false" @click="handleRemove(scope.row)">删除</el-link>
             </template>
           </el-table-column>
         </el-table>
@@ -129,6 +185,38 @@
           :total="total"
           style="margin-top: 10px;width:100%;overflow:hidden;"
         ></el-pagination>
+
+        <!-- 删除单个的提示 -->
+        <el-dialog
+          title="提示"
+          style="text-align:center;"
+          :visible.sync="showDelete"
+          :modal="true"
+          width="400px"
+          id="dialog_footer"
+        >
+          <span>删除后无法恢复，您是否确定删除当前项目？</span>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="showDelete = false" style="margin-right:16px;">取 消</el-button>
+            <el-button type="primary" @click="deleteProjectSelect">确 定</el-button>
+          </span>
+        </el-dialog>
+
+        <!-- 删除多个的提示 -->
+        <el-dialog
+          title="提示"
+          style="text-align:center;"
+          :visible.sync="showDeleteAll"
+          :modal="true"
+          width="400px"
+          id="dialog_footer"
+        >
+          <span>{{showDeleteAllTip}}</span>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="showDeleteAll = false" style="margin-right:16px;">取 消</el-button>
+            <el-button type="primary" @click="deleteProjectSelectAll">确 定</el-button>
+          </span>
+        </el-dialog>
       </div>
     </div>
   </div>
@@ -150,15 +238,24 @@ export default {
     return {
       // 筛选数据
       screenData: {
-        name: "", // 政策名称
-        category: "", // 政策分类
-        publish:"", // 发布部门
+        name: "", // 项目名称
+        publish: "", // 发布部门
+        policy: "", // 所属政策
         startDate: "", // 开始时间
         endDate: "", // 结束时间
-        // sortOrder: "" // 排序方式
+        examineStatus: "", // 审核状态
+        sortOrder: "" // 排序方式
       },
-     
-      categorys: [ // 政策状态
+      showDelete: false, // 删除项目弹窗
+      removeFlowId: "", // 要删除那个项目id
+
+      showDeleteAll: false, // 删除多个流程
+      deleteFlowArr: [], // 要删除的流程集合
+
+      showDeleteAllTip: "", // 提示
+
+      policys: [
+        // 所属政策
         {
           value: 1,
           label: "复工复产"
@@ -169,14 +266,27 @@ export default {
         }
       ],
 
-      publishs:[ // 发布部门
-            {
+      publishs: [
+        // 发布部门
+        {
           value: 1,
           label: "东莞市交通运输"
         },
         {
           value: 2,
           label: "精准扶贫"
+        }
+      ],
+
+      examineStatues: [
+        // 审核状态
+        {
+          value: 1,
+          label: "未审核"
+        },
+        {
+          value: 2,
+          label: "已审核"
         }
       ],
 
@@ -231,24 +341,19 @@ export default {
       console.log("格式化table中的日期", value, format);
       return timestamp(value, format);
     },
-    // 处理表格中的流程状态的回显
+
+    // 处理表格中的审核状态的回显
     queryExamineStatus(status) {
       console.log("审核状态：", status);
-
       switch (status) {
-        // case "0":
-        //   return "停用";
-        // case "1":
-        //   return "冻结";
-        // case "2":
-        //   return "正常";
         case "1":
           return "暂存";
         case "2":
           return "已提交";
       }
     },
-    // 删除输入的政策名称
+
+    // 删除输入的内容
     clearPolicyName() {
       this.screenData.name = "";
       // 从新请求
@@ -294,7 +399,6 @@ export default {
       // 获取其他筛选数据
       let name = me.screenData.name ? me.screenData.name.trim() : "";
       let code = me.screenData.code ? me.screenData.code.trim() : "";
-      // let status = me.screenData.status ? me.screenData.status : ""; // 发布状态
       let sortOrder = me.screenData.sortOrder ? me.screenData.sortOrder : ""; // 筛选
 
       // console.error(
@@ -338,22 +442,20 @@ export default {
     // 重置查询要求
     resetQuery() {
       let me = this;
-      // me.screenData = {
-      //   name: "",
-      //   code: "",
-      //   status: "",
-      //   startDate: "",
-      //   endDate: ""
-      // };
       console.log("是否需要重置：", me.screenData);
+
       if (
         me.screenData.name !== "" ||
-        me.screenData.code !== "" ||
+        me.screenData.publish !== "" ||
+        me.screenData.policy !== "" ||
+        me.screenData.examineStatus !== "" ||
         me.screenData.startDate !== "" ||
         me.screenData.endDate !== ""
       ) {
         me.screenData.name = "";
-        me.screenData.code = "";
+        me.screenData.publish = "";
+        me.screenData.policy = "";
+        me.screenData.examineStatus = "";
         me.screenData.startDate = "";
         me.screenData.endDate = "";
 
@@ -392,7 +494,7 @@ export default {
         this.showDeleteAll = true;
       }
     },
-    deleteFlowSelectAll() {
+    deleteProjectSelectAll() {
       let me = this;
       // 隐藏
       this.showDeleteAll = false;
@@ -424,10 +526,13 @@ export default {
       }
     },
 
+
+
     // 表格事件
-    // 审核
-    handleExamine(scope) {
-        return console.warn('审核跳转页面');
+    // 查看
+    handleSee(scope) {
+      return console.log("查看那个项目配置的数据：", scope);
+
       if (scope) {
         const flowId = scope.flowId;
         this.$router.push({
@@ -435,20 +540,72 @@ export default {
           query: { flowId: flowId, flag: 1 }
         });
       }
+    },
+    // 编辑
+    handleEdit(scope) {
+      return console.log("编辑当前项目配置的数据：", scope);
+      if (scope) {
+        const flowId = scope.flowId;
+        this.$router.push({
+          path: "/add_flow",
+          query: { flowId: flowId, flag: 1 }
+        });
+      }
+    },
+
+    //删除
+    handleRemove(scope) {
+      // console.log('要删除的节点：',scope);
+      this.removeFlowId = scope.flowId;
+
+      // 打开弹出框
+      this.showDelete = true;
+    },
+
+    // 确定删除当前项目配置
+    deleteProjectSelect() {
+      return console.log("要删除的项目id：", me.removeFlowId);
+      let me = this;
+
+      // 请求数据....
+      post1(me, deleteFlow, {
+        ids: me.removeFlowId
+      }).then(res => {
+        console.log("得到的数据：", res);
+        if (res && res.code == 1) {
+          // 重新炫染
+          me.getTableData();
+          // 提示
+          me.$message.success("当前项目配置删除成功");
+        } else {
+          me.$message.error(res.msg || "当前项目配置删除失败，请稍后再试");
+        }
+      });
+
+      // 隐藏弹出框
+      this.showDelete = false;
+    },
+
+    // 新增流程
+    addPolicy() {
+      this.$router.push({
+        path: "/policyselect",
+        query: {}
+      });
     }
   },
 
   computed: {},
   watch: {
     // 监听排序方式是否发生了改变
-    // "screenData.sortOrder": function(newVal, oldVal) {
-    //   console.log("排序方式是否发生了变化：", newVal, oldVal);
-    //   // this.pagenum = 1;
-    //   //  return console.log('排序时的页码是：',this.pagenum);
+    "screenData.sortOrder": function(newVal, oldVal) {
+      console.log("排序方式是否发生了变化：", newVal, oldVal);
+      // this.pagenum = 1;
+      //  return console.log('排序时的页码是：',this.pagenum);
 
-    //   // 请求
-    //   this.getTableData();
-    // }
+      // 请求
+      this.getTableData();
+    }
   },
 
   created() {},

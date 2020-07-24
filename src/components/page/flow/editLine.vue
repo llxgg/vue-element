@@ -13,7 +13,7 @@
       <el-input v-model="line.tranCode" @blur="onInputBlur(line)" disabled></el-input>
     </el-form-item>
     <el-form-item label="流转名称">
-      <el-input v-model="line.label" @blur="onInputBlur(line)"></el-input>
+      <el-input v-model="line.label" @blur="onInputBlur(line)" :disabled="CandE=='1'?true:false"></el-input>
     </el-form-item>
     <!-- <el-form-item label="流转按钮">
       <el-input v-model="line.tranBtn"></el-input>
@@ -35,7 +35,8 @@ export default {
     //   toName: "",
     //   toBtn: "",
 
-      isUpdate: false
+      isUpdate: false,
+      CandE:"",
     };
   },
   watch: {
@@ -51,6 +52,11 @@ export default {
       deep: true
     },
   },
+  created(){
+    //知道此页面是查看还是编辑CandE 1是查看,2是编辑
+    this.CandE = this.$route.query.CandE?this.$route.query.CandE:'';
+  },
+
   methods: {
     init(item) {
       this.isUpdate = false;

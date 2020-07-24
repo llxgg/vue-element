@@ -1,45 +1,32 @@
-<!-- 流程授权 -->
+<!-- 项目申报 -->
 <template>
   <div>
     <!-- 面包屑 -->
     <div class="crumbs">
-      <!-- <el-breadcrumb separator="/">
-        <el-breadcrumb-item>
-          <i class="el-icon-lx-calendar"></i> 流程配置 / 流程定义
-        </el-breadcrumb-item>
-      </el-breadcrumb>-->
-
       <el-breadcrumb separator-class="el-icon-arrow-right" separator=">">
-        <el-breadcrumb-item>流程配置</el-breadcrumb-item>
-        <el-breadcrumb-item>流程定义配置</el-breadcrumb-item>
+        <el-breadcrumb-item>项目管理</el-breadcrumb-item>
+        <el-breadcrumb-item>项目配置</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
 
     <!-- card -->
     <div class="container">
-      <div style="margin-bottom: 3px;font-weight:530;">流程定义</div>
+      <div style="margin-bottom: 3px;font-weight:530;">申报方向管理</div>
       <!-- 条件筛选 -->
       <div class="table-wrapper">
         <el-input
           v-model="screenData.name"
-          placeholder="请输入流程名称"
+          placeholder="请输入申报名称"
           style="width: 200px;"
           clearable
           @clear="clearFlowName"
         ></el-input>
-        <el-input
-          v-model="screenData.code"
-          placeholder="请输入流程编码"
-          style="width: 200px; margin-left:10px;"
-          clearable
-          @clear="clearFlowCode"
-        ></el-input>
 
-        <!-- 发布状态 -->
-        <!-- <el-select
+        <!-- 发布部门 -->
+        <el-select
           v-model="screenData.status"
           style="width: 120px;margin-left: 10px;"
-          placeholder="发布状态"
+          placeholder="发布部门"
         >
           <el-option
             v-for="item in flowStatus"
@@ -47,7 +34,7 @@
             :label="item.label"
             :value="item.value"
           ></el-option>
-        </el-select>-->
+        </el-select>
 
         <!-- 创建时间 -->
         <div style="margin-left: 10px;">
@@ -68,6 +55,20 @@
           ></el-date-picker>
         </div>
 
+        <!-- 申报状态 -->
+        <el-select
+          v-model="screenData.status"
+          style="width: 120px;margin-left: 10px;"
+          placeholder="申报状态"
+        >
+          <el-option
+            v-for="item in flowStatus"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+
         <!--  -->
         <div class="screen-btn">
           <el-button type="primary" style="width: 80px;" @click="getTableData(1)">查询结果</el-button>
@@ -77,19 +78,13 @@
 
       <!-- 新增/排序 -->
       <div class="table-wrapper">
-        <el-button type="primary" style="width: 100px;" @click="addFlow">新增流程定义</el-button>
+        <el-button type="primary" style="width: 100px;" @click="addDeclare">新增</el-button>
 
-        <!-- <div class="screen-btn">
-          <el-button
-            type="primary"
-            style="width: 80px;margin-right:20px;"
-            @click="getHistoryFlow"
-        >历史版本</el-button>-->
         <div class="screen-btn">
-          <el-button
+          <!-- <el-button
             style="width: 80px;margin-right:20px;color:#409EFF;"
             @click="deleteAllFlow"
-          >批量删除</el-button>
+          >批量删除</el-button>-->
 
           <el-select v-model="screenData.sortOrder" placeholder="排序方式" style="width: 120px;">
             <el-option
@@ -117,26 +112,26 @@
           <el-table-column type="selection" width="70" :show-overflow-tooltip="true"></el-table-column>
           <el-table-column label="序号" width="70" type="index"></el-table-column>
 
-          <el-table-column prop="flowName" label="流程名称" width="220"></el-table-column>
-          <el-table-column prop="flowCode" label="流程编码" width="220"></el-table-column>
+          <el-table-column prop="flowName" label="申报方向"></el-table-column>
+          <el-table-column prop="flowCode" label="申报编码"></el-table-column>
 
-          <el-table-column prop="flowVersion" label="流程版本" width="100"></el-table-column>
+          <el-table-column prop="flowVersion" label="发部部门" width="100"></el-table-column>
 
-          <el-table-column prop="status" label="流程状态" width="100">
+          <el-table-column prop="status" label="所属项目" width="100">
             <template slot-scope="scope">
               <span>{{queryFlowStatus(scope.row.status)}}</span>
             </template>
           </el-table-column>
 
-          <!-- <el-table-column prop="instanceCount" label="当前运行实例数" width="120"></el-table-column> -->
+          <el-table-column prop="instanceCount" label="申报状态" width="120"></el-table-column>
 
-          <el-table-column prop="createTime" label="创建时间">
+          <el-table-column prop="createTime" label="创建时间" width="180">
             <!-- <template slot-scope="scope">
               <span>{{formatDate(scope.row.create_time, "yy-mm-dd hh:mm:ss")}}</span>
             </template>-->
           </el-table-column>
 
-          <el-table-column prop="flowId" label="操作" width="260">
+          <el-table-column prop="flowId" label="操作" width="220">
             <template slot-scope="scope">
               <!-- <el-button size="mini" @click="handleSee(scope.row)" style="margin-right:6px;">查看</el-button>
               <el-button
@@ -211,14 +206,9 @@
 </template>
 
 <script>
-import { timestamp, timestampYMD } from "../../util/date.js";
-import { post, post1 } from "../../util/http.js";
-import {
-  getFlowData,
-  deleteFlow,
-  deleteAllFlow,
-  queryIdFlowNode,
-} from "../../util/api.js";
+import { timestamp, timestampYMD } from "../../../util/date.js";
+import { post, post1 } from "../../../util/http.js";
+import { getFlowData, deleteFlow, queryIdFlowNode } from "../../../util/api.js";
 
 export default {
   components: {},
@@ -324,12 +314,6 @@ export default {
     // 删除输入的内容
     clearFlowName() {
       this.screenData.name = "";
-      // 从新请求
-      this.pagenum = 1;
-      this.getTableData();
-    },
-    clearFlowCode() {
-      this.screenData.code = "";
       // 从新请求
       this.pagenum = 1;
       this.getTableData();
@@ -444,93 +428,92 @@ export default {
 
     // 批量删除
     // 自定义选择
-    handleSelectFlow(selection, row) {
-      console.log("选择了那个：", selection, row);
-      // 把全选的内容id先保存为一个数组
-      var deleteFlowArr = selection.map((item) => item.flowId);
-      console.log("要删除的id集合：", deleteFlowArr);
-      // 保存：
-      this.deleteFlowArr = deleteFlowArr;
-    },
-    // 全选事件
-    handleSelectFlowAll(selection) {
-      console.log("全选", selection);
-      // 把全选的内容id先保存为一个数组
-      var deleteFlowArr = selection.map((item) => item.flowId);
-      console.log("要删除的id集合：", deleteFlowArr);
-      // 保存：
-      this.deleteFlowArr = deleteFlowArr;
-    },
-    deleteAllFlow() {
-      if (this.deleteFlowArr.length > 0) {
-        // 弹框
-        this.showDeleteAllTip = `是否确认删除当前选中的${this.deleteFlowArr.length}项流程`;
-        this.showDeleteAll = true;
-      } else {
-        this.showDeleteAllTip = "请选择需要批量删除的流程";
-        this.showDeleteAll = true;
-      }
-    },
-    deleteFlowSelectAll() {
-      let me = this;
-      // 隐藏
-      this.showDeleteAll = false;
+    // handleSelectFlow(selection, row) {
+    //   console.log("选择了那个：", selection, row);
+    //   // 把全选的内容id先保存为一个数组
+    //   var deleteFlowArr = selection.map(item => item.flowId);
+    //   console.log("要删除的id集合：", deleteFlowArr);
+    //   // 保存：
+    //   this.deleteFlowArr = deleteFlowArr;
+    // },
+    // // 全选事件
+    // handleSelectFlowAll(selection) {
+    //   console.log("全选", selection);
+    //   // 把全选的内容id先保存为一个数组
+    //   var deleteFlowArr = selection.map(item => item.flowId);
+    //   console.log("要删除的id集合：", deleteFlowArr);
+    //   // 保存：
+    //   this.deleteFlowArr = deleteFlowArr;
+    // },
+    // deleteAllFlow() {
+    //   if (this.deleteFlowArr.length > 0) {
+    //     // 弹框
+    //     this.showDeleteAllTip = `是否确认删除当前选中的${this.deleteFlowArr.length}项流程`;
+    //     this.showDeleteAll = true;
+    //   } else {
+    //     this.showDeleteAllTip = "请选择需要批量删除的流程";
+    //     this.showDeleteAll = true;
+    //   }
+    // },
+    // deleteFlowSelectAll() {
+    //   let me = this;
+    //   // 隐藏
+    //   this.showDeleteAll = false;
 
-      // 执行删除操作
-      if (this.deleteFlowArr.length > 0) {
-        post(me, deleteAllFlow, {
-          flowIds: this.deleteFlowArr,
-        })
-          .then((res) => {
-            console.log("批量删除的结果：", res);
-            if (res && res.code == 0) {
-              this.$message.success(res.msg || "批量删除成功");
-              this.deleteFlowArr = []; // 重置
-              // 重新请求表格
-              this.getTableData();
-            } else {
-              // 重新请求表格
-              // this.getTableData();
-              this.deleteFlowArr = []; // 重置
-              this.$message.error(res.msg || "批量删除失败，请稍后再试");
-            }
-          })
-          .catch((err) => {
-            console.log("批量删除异常：", err);
-          });
-      } else {
-        this.showDeleteAll = false;
-      }
-    },
+    //   // 执行删除操作
+    //   if (this.deleteFlowArr.length > 0) {
+    //     post(me, deleteAllFlow, {
+    //       flowIds: this.deleteFlowArr
+    //     })
+    //       .then(res => {
+    //         console.log("批量删除的结果：", res);
+    //         if (res && res.code == 0) {
+    //           this.$message.success(res.msg || "批量删除成功");
+    //           this.deleteFlowArr = []; // 重置
+    //           // 重新请求表格
+    //           this.getTableData();
+    //         } else {
+    //           // 重新请求表格
+    //           // this.getTableData();
+    //           this.deleteFlowArr = []; // 重置
+    //           this.$message.error(res.msg || "批量删除失败，请稍后再试");
+    //         }
+    //       })
+    //       .catch(err => {
+    //         console.log("批量删除异常：", err);
+    //       });
+    //   } else {
+    //     this.showDeleteAll = false;
+    //   }
+    // },
 
     // 表格事件
     // 查看
     handleSee(scope) {
-      console.log("查看那个流程的数据：", scope);
+      return console.log("查看那个申报的数据：", scope);
 
       if (scope) {
         const flowId = scope.flowId;
         this.$router.push({
           path: "/add_flow",
-          query: { flowId: flowId, flag: 1, CandE: 1 },
+          query: { flowId: flowId, flag: 1 },
         });
       }
     },
     // 编辑
     handleEdit(scope) {
-      // alert("编辑当前流程");
+      return console.log("编辑那个申报的数据：", scope);
       if (scope) {
         const flowId = scope.flowId;
         this.$router.push({
           path: "/add_flow",
-          query: { flowId: flowId, flag: 1, CandE: 2 },
+          query: { flowId: flowId, flag: 1 },
         });
       }
     },
     handleRemove(scope) {
-      // console.log('要删除的节点：',scope);
+      return console.log("要删除的申报数据：", scope);
       this.removeFlowId = scope.flowId;
-
       // 打开弹出框
       this.showDelete = true;
     },
@@ -559,26 +542,12 @@ export default {
       this.showDelete = false;
     },
 
-    // 新增流程
-    addFlow() {
+    // 新增申报方向
+    addDeclare() {
       this.$router.push({
-        path: "/add_flow",
-        query: { flag: 1 }, // 1 为流程定义
+        path: "/adddeclaration",
+        query: {},
       });
-    },
-
-    // 历史版本
-    getHistoryFlow() {
-      console.log("历史版本：", this.historyFlowCode);
-      if (!this.historyFlowCode) {
-        this.$message.error("请选择一个流程定义");
-      } else {
-        // 条咋混页面并写到参数
-        this.$router.push({
-          path: "/flow_history",
-          query: { code: this.historyFlowCode },
-        });
-      }
     },
   },
 

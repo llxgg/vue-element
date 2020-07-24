@@ -12,11 +12,10 @@
                 <i class="el-icon-delete" @@click.stop="deleteNode"></i>
             </div>
         </div> -->
-        <div class="node-con"><i :class="iconClass" class="type-icon"></i><span>{{node.label}}</span></div>
+        <div class="node-con"><i :class="iconClass" class="type-icon"></i><span>{{node.label}}</span><span v-show="showtip" class="iconfont2">&#xe771;</span></div>
         <div class="node-del" v-show="mouseEnter" @click.stop="deleteNode">
-          <i class="el-icon-circle-close"></i>
+          <i class="el-icon-circle-close" v-show="CandE=='1'?false:true"></i>
         </div>
-
         <!--连线用--//触发连线的区域-->
         <div class="flow-node-drag" v-show="isconnect"></div>
     </div>
@@ -27,14 +26,16 @@
         props: {
             node: Object,
             isconnect: Boolean,
+            showtip:Boolean
         },
         created(){
             // console.log('wwwwwwwwwwwwwwww',this.node);
+            this.CandE=this.$route.query.CandE?this.$route.query.CandE:''
         },
         data() {
             return {
                 mouseEnter: false,
-               
+                CandE:'',
             }
         }, 
         computed: {

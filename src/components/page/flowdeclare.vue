@@ -151,13 +151,13 @@
             </template>
           </el-table-column>-->
 
-          <el-table-column prop="createTime" label="创建时间" width="140">
-            <!-- <template slot-scope="scope">
+          <!-- <el-table-column prop="createTime" label="创建时间" width="140">
+            <template slot-scope="scope">
               <span>{{formatDate(scope.row.create_time, "yy-mm-dd hh:mm:ss")}}</span>
-            </template>-->
-          </el-table-column>
+            </template>
+          </el-table-column> -->
 
-          <el-table-column label="绑定时间" width="140">
+          <el-table-column label="创建时间" width="140">
             <template
               slot-scope="scope"
             >{{scope.row.updateTime.includes('.') ? scope.row.updateTime.substr(0,scope.row.updateTime.indexOf('.')) : scope.row.updateTime}}</template>
@@ -539,7 +539,7 @@ export default {
     // 监听排序方式是否发生了改变
     "screenData.sortOrder": function(newVal, oldVal) {
       console.log("排序方式是否发生了变化：", newVal, oldVal);
-      this.pagenum = 1;
+      // this.pagenum = 1;
       // 请求
       this.getTableData();
     }
@@ -553,7 +553,7 @@ export default {
     // 获取所属项目的数据
     this.getDeclareProjectList();
     // 获取绑定申报方向porject,并保持到localStorage中
-    this.getDeclareProjectData();
+    // this.getDeclareProjectData();
   }
 };
 </script>

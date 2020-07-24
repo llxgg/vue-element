@@ -45,7 +45,7 @@
      <div class="JBXX_son" >
             <div class="JBXX_box" style="border-right:1px solid #e7e7e7;color:#9a9b9f">节点名称</div>
             <div class="JBXX_box">
-              <el-input  v-model="node.nodeName" class="JBXX_box" @blur="onInputBlur(node)" :disabled="flag=='3'?true:false"></el-input>
+              <el-input  v-model="node.nodeName" class="JBXX_box" @blur="onInputBlur(node)" :disabled="flag=='3'|| CandE=='1'?true:false"></el-input>
             </div>
       </div>
    </div>
@@ -53,7 +53,7 @@
      <div class="JBXX_son" >
             <div class="JBXX_box" style="border-right:1px solid #e7e7e7;color:#9a9b9f">业务类型</div>
             <div class="JBXX_box">
-              <el-select v-model="node.businessType" placeholder="请选择" @change="changetype(node)" :disabled="flag=='3'?true:false">
+              <el-select v-model="node.businessType" placeholder="请选择" @change="changetype(node)" :disabled="flag=='3' || CandE=='1'?true:false">
               <el-option
                 v-for="item in TypeList"
                 :key="item.Value"
@@ -68,7 +68,7 @@
      <div class="JBXX_son" >
             <div class="JBXX_box" style="border-right:1px solid #e7e7e7;color:#9a9b9f">备注</div>
             <div class="JBXX_box">
-              <el-input  v-model="node.Remark" class="JBXX_box"  type="textarea" :autosize="{ minRows: 2, maxRows: 4}" @blur="onInputBlur(node)" :disabled="flag=='3'?true:false"></el-input>
+              <el-input  v-model="node.Remark" class="JBXX_box"  type="textarea" :autosize="{ minRows: 2, maxRows: 4}" @blur="onInputBlur(node)" :disabled="flag=='3'|| CandE=='1'?true:false"></el-input>
             </div>
       </div>
    </div>
@@ -105,13 +105,18 @@ export default {
       ],
       //节点类型
       nodeCategory:'',
-      falg:''
+      falg:'',
+      CandE:'',//1查看2编辑
     };
   },
   created() {
     this.flag = this.$route.query.flag;
     this.flag ==1?this.activeNames.push('1'):'';
     console.log('this.activeNames',this.activeNames)
+
+    //知道此页面是查看还是编辑CandE 1是查看,2是编辑
+    this.CandE = this.$route.query.CandE?this.$route.query.CandE:'';
+
   },
   methods: {
     init(data, id) {

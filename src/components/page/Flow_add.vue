@@ -42,6 +42,7 @@
     <div class="appcontainer">
       <div class="flow-menu">
         <div
+          :class="CandE=='1' || flag =='3'?'noclick':''"
           class="menu-item"
           v-for="item in menueList"
           draggable="true"
@@ -54,25 +55,25 @@
           <div>{{item.name}}</div>
         </div>
         <hr />
-        <div class="menu-item" @click="isConnect=true">
+        <div class="menu-item" @click="isConnect=true" :class="CandE=='1'?'noclick':''">
           <i class="el-icon-bottom-right"></i>
           <div>连线</div>
         </div>
-        <div class="menu-item" @click="isConnect=false">
+        <div class="menu-item" @click="isConnect=false" :class="CandE=='1'?'noclick':''">
           <i class="el-icon-rank"></i>
           <div>选择</div>
         </div>
       </div>
       <div class="flow-detail" ref="flowDetail" id="flowDetail"    @drop="drop2($event)" @dragover.prevent>
-        <div style="display:flex;color:#6ea1e7;justify-content: center;position:absolute;z-index:999;top:2%;left:35%">
+        <div style="display:flex;color:#6ea1e7;justify-content: center;position:absolute;z-index:999;top:2%;left:35%" v-show="CandE=='1' || flag=='3'?false:true">
           <el-button plain style="color:#6ea1e7;" @click="flowCopy">复制</el-button>
           <el-button plain style="color:#6ea1e7;" @click="flowpaste">粘贴</el-button>
           <el-button plain style="color:#6ea1e7;" @click="flowcut">剪切</el-button>
           <el-button plain style="color:#6ea1e7;" @click="flowdelete"> 删除</el-button>
           <el-button plain style="color:#6ea1e7;" @click="flowempty">清空</el-button>           
         </div>
-        <div style="display:flex;color:#6ea1e7; justify-content:flex-end;position:absolute;z-index:999;top:10%;right:0;">
-          <span class="iconfont" @click="bigbox">&#xe71e;</span>
+        <div  :class="CandE=='1' || flag=='3'?'smbuttom2':'smbuttom'">
+             <span class="iconfont" @click="bigbox" >&#xe71e;</span>
             <span class="iconfont" @click="smallbox" >&#xe71f;</span>
             <span class="iconfont" @click="fullView">&#xe618;</span>
             <span class="iconfont" @click="fullView">&#xe619;</span>
@@ -87,12 +88,14 @@
           @dblclick="isConnect=false"
           :style="addborder?'-webkit-animation-name: shineRed;-webkit-animation-duration: 3s;-webkit-animation-iteration-count: infinite;':''" 
         >
+        <!-- :showtip="showtip=defdata?!defdata.includes(node.id):false" -->
           <flowNode
             v-for="node in data.nodeList"
             :key="node.id"
             :node="node"
             :id="node.id"
             :isconnect="isConnect"
+            :showtip="flag=='2'?!defdata.includes(node.id):false"
             @delete-node="deleteNode"
             @change-node-site="changeNodeSite"
             @edit-node="editNode"
@@ -110,19 +113,19 @@
         <div class="flow-edit-content"><!--editType=='flow'-->
           <edit-node ref="nodeForm" id="nodeForm" v-show="flag =='2'?false:(flag =='3'?true:editType=='node')"  @getSon="getSonData" :current="currentnode" ></edit-node>
           <edit-line ref="lineForm" id="lineForm" v-show="flag =='2'?false:(flag =='3'?false:editType=='line')"  @line-save="lineLabelSave" style="padding:12px"></edit-line>
-          <edit-flow ref="flowEdit" v-show="flag !='1'?true:(editType=='flow')" :current="currentnode" :flowInfodata="data.flowInfo" @getflow="getflowData"></edit-flow>
+          <edit-flow ref="flowEdit" v-show="flag !='1'?true:(editType=='flow')" :current="currentnode" :flowInfodata="data.flowInfo" @getflow="getflowData" @getdefarr="getdefarrdata"></edit-flow>
           
         </div>
       </div>
     </div>
     <div class="bigboxright-button">
       <el-button    
-         v-show="flag !=3?true:false"
+         v-show="flag !=3?(CandE==1?false:true):false"
         style="background-color: #1abc9c;width:100px;color: #fff;"
         @click="saveFlow(status=1)"
       >暂存</el-button>
       <el-button        
-         v-show="flag !=3?true:false"
+         v-show="flag !=3?(CandE==1?false:true):false"
         style="background-color: #1abc9c;width:100px;color: #fff;margin:0 18px 0 30px"
         @click="saveFlow(status=2)"
       >发布</el-button>
@@ -309,7 +312,6 @@ export default {
         lineList: [],
         // lastNodeList: []
       },
-    
       currentItem: "", //临时存添加的元素
       isConnect: false, //判断是否连接
       timer: null, //定时器,判断单双击,
@@ -331,7 +333,10 @@ export default {
       declaration_flow_id:'',//申报id
       isName:false,//是否禁用流程名称
       addborder:false,//给流程图加边框
-      test:{}
+      test:{},
+      CandE:'',//区分是编辑还是查看
+      showtip:true,//如果填完了需要修改
+      defdata:'',//未填写完整的id数组
     };
   },
   components: {
@@ -355,6 +360,10 @@ export default {
     this.flag = this.$route.query.flag;
     this.flag !=1?this.direction=this.$route.query.declarationName:'';
     this.flowid=this.$route.query.Id?this.$route.query.Id:this.$route.query.flowId
+
+    //拿不到flowid说明就是新增页面。
+    console.log('this.flowid---------------------',this.flowid)
+
     //申报方向名称
     this.direction=this.$route.query.flowName?this.$route.query.flowName:''
     //流程图实例需要的ywlsh
@@ -365,6 +374,9 @@ export default {
 
     //授权需要的id
     this.declaration_id=this.$route.query.declaId?this.$route.query.declaId:''
+
+    //需要知道是查看还是编辑,查看禁用暂存和发布的按钮,查看不能他在拉节点那些。
+    this.CandE=this.$route.query.CandE?this.$route.query.CandE:""
 
     console.log("22222222222222222222",this.flag != 3)
     //流程实例调用接口
@@ -561,7 +573,7 @@ export default {
     //点击关闭按钮
     closeFlow(){
       
-      console.log(res)
+      // console.log(res)
       localStorage.removeItem("flowData");　　
       this.flag=='2'?this.$router.push({path:"/flowauth"}):this.flag=='3'?this.$router.push({path:"/instanquery"}):this.$router.push({path:"/flowdefine"})
     },
@@ -924,7 +936,6 @@ export default {
       this.editNode(temp.id);
     },
     drop2(event){
-        console.log(2222)
        var temp = {
         id: this.getUUID(),
         label: this.currentItem.name,
@@ -932,6 +943,26 @@ export default {
         left: event.offsetX + "px",
         Type: this.currentItem.type
       };
+      let nodeList=this.data.nodeList
+
+      if(this.currentItem.type==1){
+      for(let i=0;i<nodeList.length;i++){
+        if(nodeList[i].Type==1){
+           this.$message.error("开始节点是唯一的")
+           return false
+        }
+      }
+      }else if(this.currentItem.type==2){
+         for(let i=0;i<nodeList.length;i++){
+        if(nodeList[i].Type==2){
+           this.$message.error("结束节点是唯一的")
+           return false
+        }
+         }
+      }
+
+      //新增的节点先不打钩
+      // this.defdata.push(temp.id)
 
       this.addNode(temp);
       this.editNode(temp.id);
@@ -1006,7 +1037,6 @@ export default {
         //    data.nodeList.map
         //  })
 
-       
         // return
         
           flowObj.trans.map(item=>{
@@ -1021,12 +1051,13 @@ export default {
             
           })
         
-
-        if(status==1){
-             flowObj['flowId']=this.flowid?this.flowid:''
-        }else if(status==2){
-            flowObj['flowId']=''
+        //新增不需要有flowid，所以做一个判断
+        if(!this.flowid){
+             flowObj['flowId']=''
             flowObj['Id']=''
+        }else{
+            flowObj['flowId']=this.flowid
+            flowObj['Id']=this.flowid
             flowObj.trans.map(item=>{
             item['tranId']=item.id
             // item['nodeId']=item.id
@@ -1037,6 +1068,7 @@ export default {
             item['nodeId']=item.id
             console.log("进来了")
           })
+          
           //   if(flowObj.nodes.length!=0){
           //     flowObj.nodes.map(item=>{           
           //   item.flowId=''
@@ -1049,20 +1081,78 @@ export default {
           //   }
         }
 
+        let nodeTypearr=[]
+        flowObj.nodes.map(item=>{
+        nodeTypearr.push(item.nodeType);
+      })
+
+        if(!nodeTypearr.includes(0)){
+                this.$message.error(`不能没有开始节点`);
+                return false;
+            }else if(!nodeTypearr.includes(9)){
+                this.$message.error(`不能没有结束节点`);
+                return false;
+        }
+
+        if(flowObj.nodes.length>=3){
+            
+        }else{
+          this.$message.error(`不能没有中间节点`);
+          return false;
+        }
+
+
+      //开始节点id和结束节点id
+      // let startid
+      //专门的两个连线集合
+      let startNodearr=[];
+      let endNodearr=[];
+      flowObj.trans.map(item=>{
+        startNodearr.push(item.startNode);
+        endNodearr.push(item.endNode);
+      })
+
+      let nodes=flowObj.nodes
+        for(let i=0;i<nodes.length;i++){
+            if(nodes[i].nodeType==0){
+              if(startNodearr.includes(nodes[i].nodeId)){
+                  console.log("存在开始连线")
+              }else{
+                  this.$message.error(`开始节点(${nodes[i].nodeName})没有连线`);
+                  return false;
+              }
+            }else if(nodes[i].nodeType==9){
+              if(endNodearr.includes(nodes[i].nodeId)){
+                  console.log("存在结束连线")
+              }else{
+                  this.$message.error(`结束节点(${nodes[i].nodeName})没有连线`);
+                  return false;
+              }
+            }else{
+              if(startNodearr.includes(nodes[i].nodeId) && endNodearr.includes(nodes[i].nodeId)){
+                 console.log("中间节点存在连线")
+              }else{
+                this.$message.error(`中间节点(${nodes[i].nodeName})必须两端连线`);
+                 return false;
+              }
+            }
+        }
+
+
       // flowObj.trans.map(item=>{
       //       item['tranId']=''
       //      item.id=''
       //      item.startNode=''
       //      item.endNode=''
-      //     })
+      //   })
 
       //  flowObj.nodes.map(item=>{
       //       item.id=''
       //       item['nodeId']=''
-           
       //     })
         console.log('最终胜出',flowObj)
       
+        
         var istart=0;
         var iend=0
          flowObj.nodes.map(item=>{
@@ -1318,6 +1408,22 @@ export default {
             nodeCategory:copycurrentnode.nodeCategory,
             nodeId:id
           };
+           let nodeList=this.data.nodeList
+            if(temp1.Type==1){
+            for(let i=0;i<nodeList.length;i++){
+              if(nodeList[i].Type==1){
+                this.$message.error("开始节点是唯一的，不能再粘贴")
+                return false
+              }
+            }
+            }else if(temp1.Type==2){
+              for(let i=0;i<nodeList.length;i++){
+              if(nodeList[i].Type==2){
+                this.$message.error("结束节点是唯一的，不能再粘贴")
+                return false
+              }
+              }
+            }
 
         this.addNode(temp1);
         this.editNode(temp1.id);
@@ -1353,9 +1459,6 @@ export default {
     },
     //清空
     flowempty(){
-      // console.log("this.data",this.data)
-      // return
-      // const dataid=this.data.flowInfo.Id?this.data.flowInfo.Id:''
       var connections = this.jsPlumb.getAllConnections();
       console.log("connections",connections)
       
@@ -1379,6 +1482,10 @@ export default {
       //     message: '成功',
       //     type: 'success'
       // });
+    },
+    //节点组件传过来未填写完整的数组
+    getdefarrdata(data){
+      this.defdata=data
     }
   }
 };
@@ -1548,7 +1655,30 @@ export default {
 -webkit-animation-iteration-count: infinite; 
 } */
 
+.noclick{
+  pointer-events: none;
+}
 
+/* 放大缩小按钮的样式 */
+.smbuttom{
+    display:flex;
+    color:#6ea1e7; 
+    justify-content:flex-end;
+    position:absolute;
+    z-index:999;
+    top:10%;
+    right:0;
+}
+
+.smbuttom2{
+    display:flex;
+    color:#6ea1e7; 
+    justify-content:flex-end;
+    position:absolute;
+    z-index:999;
+    top:2%;
+    right:0;
+}
 
 
 

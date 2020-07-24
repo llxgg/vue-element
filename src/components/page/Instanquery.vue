@@ -341,7 +341,7 @@ export default {
     "screenData.sortOrder": function(newVal, oldVal) {
       console.log("排序方式发生变化：", newVal, oldVal);
       // 发送请求
-      this.pagenum = 1;
+      // this.pagenum = 1;
       this.getTableData();
     }
   },

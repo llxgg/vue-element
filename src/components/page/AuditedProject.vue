@@ -1,22 +1,22 @@
-<!-- 待审核政策 -->
+<!-- 已审核项目 -->
 <template>
   <div>
     <!-- 面包屑 -->
     <div class="crumbs">
       <el-breadcrumb separator-class="el-icon-arrow-right" separator=">">
         <el-breadcrumb-item>审核管理</el-breadcrumb-item>
-        <el-breadcrumb-item>待审核政策</el-breadcrumb-item>
+        <el-breadcrumb-item>已审核项目</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
 
     <!-- card -->
     <div class="container">
-      <div style="margin-bottom: 3px;font-weight:530;">政策审核</div>
+      <div style="margin-bottom: 3px;font-weight:530;">已审核项目</div>
       <!-- 条件筛选 -->
       <div class="table-wrapper">
         <el-input
           v-model="screenData.name"
-          placeholder="请输入政策名称"
+          placeholder="请输入项目名称"
           style="width: 200px;"
           clearable
           @clear="clearPolicyName"
@@ -26,7 +26,7 @@
         <el-select
           v-model="screenData.category"
           style="width: 160px;margin-left: 10px;"
-          placeholder="政策分类"
+          placeholder="项目分类"
         >
           <el-option
             v-for="item in categorys"
@@ -92,11 +92,11 @@
           <el-table-column type="selection" width="70" :show-overflow-tooltip="true"></el-table-column>
           <el-table-column label="序号" width="70" type="index"></el-table-column>
 
-          <el-table-column prop="flowName" label="政策名称" width="220"></el-table-column>
-          <el-table-column prop="flowCode" label="政策编码" width="220"></el-table-column>
+          <el-table-column prop="flowName" label="项目名称" width="220"></el-table-column>
+          <el-table-column prop="flowCode" label="项目编码" width="220"></el-table-column>
 
           <el-table-column prop="flowVersion" label="发布部门" width="100"></el-table-column>
-          <el-table-column prop="flowVersion" label="政策分类" width="100"></el-table-column>
+          <el-table-column prop="flowVersion" label="项目分类" width="100"></el-table-column>
           <el-table-column prop="flowVersion" label="行使层级" width="100"></el-table-column>
 
           <el-table-column prop="status" label="审核状态" width="100">
@@ -112,8 +112,8 @@
               <el-link
                 style="margin-right:22px;color:#409EFF;"
                 :underline="false"
-                @click="handleExamine(scope.row)"
-              >审核</el-link>
+                @click="handleExamineProjectSee(scope.row)"
+              >查看</el-link>
             </template>
           </el-table-column>
         </el-table>
@@ -236,12 +236,6 @@ export default {
       console.log("审核状态：", status);
 
       switch (status) {
-        // case "0":
-        //   return "停用";
-        // case "1":
-        //   return "冻结";
-        // case "2":
-        //   return "正常";
         case "1":
           return "暂存";
         case "2":
@@ -426,8 +420,8 @@ export default {
 
     // 表格事件
     // 审核
-    handleExamine(scope) {
-        return console.warn('审核跳转页面');
+    handleExamineProjectSee(scope) {
+        return console.warn('查看已审核项目跳转页面');
       if (scope) {
         const flowId = scope.flowId;
         this.$router.push({

@@ -16,7 +16,7 @@
     </div>
 
     <div style="background-color:#fff;">
-      <div id="search" style="margin:10px 0 0px 120px;">
+      <div id="search" style="margin:10px 0 0px 120px;" v-if="isEdit !== 1 && isEdit !== 2">
         <el-input
           placeholder="请输入搜索关键字"
           v-model="searchInput"
@@ -32,6 +32,8 @@
           style="width: 64px;"
         >搜索</el-button>
       </div>
+
+      <div id="search" style="margin:10px 0 0px 120px;" v-else></div>
 
       <div>
         <el-form :model="bindFlow" :rules="rules" ref="ruleForm" label-width="120px">
@@ -64,6 +66,7 @@
                   clearable
                   filterable
                   placeholder="请输入关键词"
+                  :disabled="isEdit == 1 ? true : false"
                 >
                   <el-option
                     v-for="item in options"
@@ -177,35 +180,6 @@ export default {
 
       // 选择项目（项目绑定）
       flowProjectData: [],
-      // defaultCheckedArr: [
-      //   {
-      //     id: "1",
-      //     name: "申报项目",
-      //     declarationVos: [
-      //       {
-      //         id: "305294b6-d9c6-462f-ab2d-12fb6b462441",
-      //         name: "申报1",
-      //         disabled: true
-      //       },
-      //       {
-      //         id: "305294b6-d9c6-462f-ab2d-12fb6b462442",
-      //         name: "申报2",
-      //         disabled: true
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     id: "2",
-      //     name: "申报项目2",
-      //     declarationVos: [
-      //       {
-      //         id: "305294b6-d9c6-462f-ab2d-12fb6b462443",
-      //         name: "申报3",
-      //         disabled: false
-      //       }
-      //     ]
-      //   }
-      // ],
 
       projectProps: {
         // 属性控件的配置
@@ -266,12 +240,17 @@ export default {
             // 处理：
             console.log("aaaaaaaaaaaa", me.isEdit);
 
-            if (me.isEdit != 1 && me.isEdit != 2) {
-              let lastArr = this.handleMenuList(res.data.zcProjects);
-               me.flowProjectData = lastArr;
+            // 新增
+            if (res.data.zcProjects && res.data.zcProjects.length > 0) {
+              if (me.isEdit != 1 && me.isEdit != 2) {
+                let lastArr = this.handleMenuList(res.data.zcProjects);
+                me.flowProjectData = lastArr;
                 me.defaultCheckedArr = this.defaultChecked;
+              } else {
+                // 当前是查看 || 编辑
+              }
             } else {
-              // me.flowProjectData = localStorage.getItem("flowProJectData")
+              me.flowProjectData = res.data.zcProjects || [];
             }
           } else {
             console.log("读取异常：", res);
@@ -308,8 +287,8 @@ export default {
         });
       }
 
-      return arr;
       console.error("处理后的数据：", arr);
+      return arr;
       setTimeout(() => {
         me.flowProjectData = arr;
         me.defaultCheckedArr = this.defaultChecked;
@@ -372,7 +351,10 @@ export default {
             let defaultCheckedArr = [];
             defaultCheckedArr.push(res.data.declarationId);
 
-            console.log("*******************默认回显选中的************",defaultCheckedArr);
+            console.log(
+              "*******************默认回显选中的************",
+              defaultCheckedArr
+            );
 
             this.defaultCheckedArr = defaultCheckedArr;
 
@@ -382,19 +364,23 @@ export default {
 
             // 处理el-tree的数据
 
-            let ProjectData = JSON.parse(
-              localStorage.getItem("flowProJectData")
-            );
-            
-            // 把el-tree数据 和 选中的那个传递进去
+            // let ProjectData = JSON.parse(
+            //   localStorage.getItem("flowProJectData")
+            // );
+
+            // // 把el-tree数据 和 选中的那个传递进去
+            let ProjectData = res.data.projectDeclarationVo
+              ? res.data.projectDeclarationVo.zcProjects
+              : [];
             let lastArr = this.handleProject(ProjectData);
             this.flowProjectData = lastArr;
             console.warn("***************************");
             console.log("获取到的项目数据：", lastArr);
             console.log("本地已经更新的项目数据：", this.flowProjectData);
             console.warn("***************************");
-            
+
             // this.formatRoutes(ProjectData);
+
           }
         })
         .catch(err => {
@@ -411,14 +397,11 @@ export default {
       if (arr.length > 0) {
         arr.forEach(item => {
           let arrchildren = item.declarationVos;
+          item.disabled = true;
           if (Array.isArray(arrchildren) && arrchildren.length > 0) {
             this.handleProject(arrchildren);
           } else {
-            if (item.id !== this.defaultCheckedArr[0]) {
-              item.disabled = true;
-            } else {
-              item.disabled = false;
-            }
+           item.disabled = true;
           }
         });
       }
@@ -445,144 +428,63 @@ export default {
       // this.$set(this.flowProjectData, 0, arr);
     },
 
-    // 处理数据2：
-    formatRoutes(routerArr, Id) {
-      const arr1 = [];
-
-      let obj1 = {};
-
-      const arr2 = [];
-
-      let obj2 = {};
-
-      routerArr.forEach(router => {
-        const tmp = { ...router };
-
-        if (tmp.declarationVos && Array.isArray(tmp.declarationVos)) {
-          console.warn("进入条件后，得到的每一项数据：", tmp);
-
-          // tmp.isManager == 1 ? (tmp.disabled = true) : (tmp.disabled = false);
-          obj1 = {
-            id: tmp.id,
-
-            name: tmp.name,
-
-            declarationVos: tmp.declarationVos
-          };
-
-          arr1.push(obj1);
-
-          this.formatRoutes(tmp.declarationVos, tmp.id);
-        } else {
-          // console.log("bbbbbbbbbbbbbbbbbbbb", tmp, Id);
-          // 进到最内容数组
-
-          tmp.id !== this.defaultCheckedArr[0]
-            ? (tmp.disabled = true)
-            : (tmp.disabled = false);
-
-          obj2 = {
-            id: tmp.id,
-            parentId: Id,
-
-            name: tmp.name,
-
-            binded: tmp.binded
-          };
-
-          arr2.push(obj2);
-        }
-      });
-
-      console.error("xxxx结果1：xxxxx", arr1);
-      console.error("xxxx结果2：xxxxx", arr2);
-      // return arr;
-    },
-
-    // 处理数据3：
-    tickMenuIdFilter: function() {
-      var resultArr = new Array();
-      var getTickMenuId = function(obj) {
-        if (undefined == obj || null == obj || !obj instanceof Object) {
-          return;
-        }
-        if (obj.fs > 0) {
-          // console.log('obj',obj)
-          obj.disabled = true;
-          resultArr.push(obj.id);
-        }
-        if (null != obj.children && obj.children instanceof Array) {
-          for (let child of obj.children) {
-            getTickMenuId(child);
-          }
-        }
-      };
-
-      return {
-        filter: function(arr) {
-          if (!arr instanceof Array) {
-            return false;
-          }
-          resultArr = new Array();
-          for (let rootMenu of arr) {
-            getTickMenuId(rootMenu);
-          }
-          return resultArr;
-        }
-      };
-    },
-
     // 提交
     submitFlow(ruleForm) {
       let me = this;
 
-      // 新增
-      const k1 = this.$refs.tree.getHalfCheckedKeys(); // 半选(也就是父节点)
-      const k2 = this.$refs.tree.getCheckedKeys(); // 全选（选择的每一个节点）
-
-      console.log("tree选中的状态：", "半选：", k1, "全选：", k2);
-      // 合并
-      const selectKeys = [...k1, ...k2];
-
-      // 把已经选择过的剔除掉：
-      console.error(
-        "当前选择那些项目：",
-        selectKeys,
-        "已经选择过的数据：",
-        this.defaultCheckedArr
-      );
-      // 获取当前已经选过的数组中的在最后一位：
-      let lastSelectId = this.defaultCheckedArr[
-        this.defaultCheckedArr.length - 1
-      ];
-      console.warn("最后选中的哪个id：", lastSelectId);
-
-      // 获取当前选中的那些id
-      let lastIdIndex = selectKeys.findIndex(item => item == lastSelectId);
-      console.warn("最后选中的哪个id的位置：", lastIdIndex);
-
-      // 只取lastIdIndex后面的值：
-      let currentSelectId = selectKeys.slice(lastIdIndex);
-      console.error("当前选中的有哪些id：", currentSelectId);
-
-      // 已经选择过的数据，只要没有的，才保留：
-
-      let difference = selectKeys
-        .filter(x => this.defaultCheckedArr.indexOf(x) == -1)
-        .concat(
-          this.defaultCheckedArr.filter(x => selectKeys.indexOf(x) == -1)
-        );
-      console.warn("********************************", difference);
-
       // 获取符合数据的字符串id：
       let lastArray = [];
-      difference.map(item => {
-        if (item.length > 5) {
-          lastArray.push(item);
-        }
-      });
-      console.log("取最长的数据：", lastArray);
-      
+
+      // 是否有数据供用户选择：
+      if (me.flowProjectData.length > 0) {
+        // 新增
+        const k1 = this.$refs.tree.getHalfCheckedKeys(); // 半选(也就是父节点)
+        const k2 = this.$refs.tree.getCheckedKeys(); // 全选（选择的每一个节点）
+
+        console.log("tree选中的状态：", "半选：", k1, "全选：", k2);
+        // 合并
+        const selectKeys = [...k1, ...k2];
+
+        // 把已经选择过的剔除掉：
+        console.error(
+          "当前选择那些项目：",
+          selectKeys,
+          "已经选择过的数据：",
+          this.defaultCheckedArr
+        );
+        // 获取当前已经选过的数组中的在最后一位：
+        let lastSelectId = this.defaultCheckedArr[
+          this.defaultCheckedArr.length - 1
+        ];
+        console.warn("最后选中的哪个id：", lastSelectId);
+
+        // 获取当前选中的那些id
+        let lastIdIndex = selectKeys.findIndex(item => item == lastSelectId);
+        console.warn("最后选中的哪个id的位置：", lastIdIndex);
+
+        // 只取lastIdIndex后面的值：
+        let currentSelectId = selectKeys.slice(lastIdIndex);
+        console.error("当前选中的有哪些id：", currentSelectId);
+
+        // 已经选择过的数据，只要没有的，才保留：
+        let difference = selectKeys
+          .filter(x => this.defaultCheckedArr.indexOf(x) == -1)
+          .concat(
+            this.defaultCheckedArr.filter(x => selectKeys.indexOf(x) == -1)
+          );
+        console.warn("********************************", difference);
+
+        difference.map(item => {
+          if (item.length > 8) {
+            lastArray.push(item);
+          }
+        });
+        console.log("排除父类id，取最长的之类id的数据：", lastArray);
+      } else {
+        // 绑定申报项目没有数据：
+        lastArray = []
+      }
+
       // 校验el-tree
       if (this.isEdit !== 1 && this.isEdit !== 2) {
         //新增
@@ -624,27 +526,6 @@ export default {
                 console.log("编辑申报异常：", err);
               });
           } else {
-            // // 新增
-            // const k1 = this.$refs.tree.getHalfCheckedKeys(); // 半选(也就是父节点)
-            // const k2 = this.$refs.tree.getCheckedKeys(); // 全选（选择的每一个节点）
-
-            // console.log("tree选中的状态：", "半选：", k1, "全选：", k2);
-            // // 合并
-            // const selectKeys = [...k1, ...k2];
-
-            // // 把已经选择过的剔除掉：
-            // console.error(  "当前选择那些项目：",selectKeys,'已经选择过的数据：',this.defaultCheckedArr);
-            // // 获取当前已经选过的数组中的在最后一位：
-            // let lastSelectId = this.defaultCheckedArr[this.defaultCheckedArr.length - 1]
-            // console.warn('最后选中的哪个id：',lastSelectId)
-
-            // // 获取当前选中的那些id
-            // let lastIdIndex = selectKeys.findIndex(item => item == lastSelectId)
-            // console.warn('最后选中的哪个id的位置：',lastIdIndex)
-
-            // // 只取lastIdIndex后面的值：
-            // let currentSelectId = selectKeys.slice(lastIdIndex+1)
-            // console.warn('当前选中的有哪些id：',currentSelectId)
 
             // 转换成字符串
             const selectStr = lastArray.join(",");
@@ -714,7 +595,7 @@ export default {
           this.bindFlow.flowEdition = currentObj.version;
         }
       }
-    },
+    }
   },
 
   created() {

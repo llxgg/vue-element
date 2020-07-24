@@ -98,7 +98,7 @@
 
       <!-- 项目绑定/排序 -->
       <div class="table-wrapper">
-        <el-button type="primary" style="width: 80px;" @click="addAuth">新增授权</el-button>
+        <!-- <el-button type="primary" style="width: 80px;" @click="addAuth">新增授权</el-button> -->
 
         <div class="screen-btn">
           <el-select v-model="screenData.sortOrder" placeholder="排序方式" style="width: 120px;">
@@ -169,12 +169,8 @@
 
               <!--  编辑的处理：
                 :style="{'opacity': (scope.row.grantStatus == 1) && (scope.row.publishStatus == 1) ? '0.5' : '1'}"
-                :disabled="(scope.row.grantStatus == 1) && (scope.row.publishStatus == 1) ? true : false" -->
-              <el-link
-                class="el__link-deit"
-                :underline="false"
-                @click="handleEdit(scope.row)"
-              >编辑</el-link>
+              :disabled="(scope.row.grantStatus == 1) && (scope.row.publishStatus == 1) ? true : false"-->
+              <el-link class="el__link-deit" :underline="false" @click="handleEdit(scope.row)">授权</el-link>
 
               <!-- 未授权的不可发布 -->
               <el-link
@@ -238,7 +234,7 @@ import {
   getDeclareRoleList,
   delDeclaration,
   deleteGrant,
-  declareListProject
+  declareListProject,
 } from "../../util/api.js";
 
 export default {
@@ -254,57 +250,57 @@ export default {
 
         startDate: "",
         endDate: "",
-        sortOrder: "" // 排序方式
+        sortOrder: "", // 排序方式
       },
       showDelete: false, // 删除绑定的流程
       // 所属项目
       projects: [
         {
           value: 1,
-          label: "申报项目"
+          label: "申报项目",
         },
         {
           value: 2,
-          label: "网上预受理项目"
+          label: "网上预受理项目",
         },
         {
           value: 3,
-          label: "承办项目"
-        }
+          label: "承办项目",
+        },
       ],
       // 授权状态
       roleStatues: [
         {
           value: 0,
-          label: "未授权"
+          label: "未授权",
         },
         {
           value: 1,
-          label: "已授权"
-        }
+          label: "已授权",
+        },
       ],
       // 发布状态
       sendStatues: [
         {
           value: 0,
-          label: "未发布"
+          label: "未发布",
         },
         {
           value: 1,
-          label: "已发布"
-        }
+          label: "已发布",
+        },
       ],
 
       // 排序方式
       sortRanks: [
         {
           value: "asc",
-          label: "时间升序"
+          label: "时间升序",
         },
         {
           value: "desc",
-          label: "时间倒序"
-        }
+          label: "时间倒序",
+        },
       ],
       tableData: [], // 表格数据
       pagenum: 1, // 当前页码
@@ -314,21 +310,21 @@ export default {
       // 日期时间处理
       /* start 开始时间小于今天,结束时间不能大于开始时间 */
       pickerOptionsStart: {
-        disabledDate: time => {
+        disabledDate: (time) => {
           if (this.screenData.endDate) {
             return time.getTime() > new Date(this.screenData.endDate).getTime();
           }
-        }
+        },
       },
       pickerOptionsEnd: {
-        disabledDate: time => {
+        disabledDate: (time) => {
           if (this.screenData.startDate) {
             return (
               time.getTime() < new Date(this.screenData.startDate).getTime()
             );
           }
-        }
-      }
+        },
+      },
       /* end*/
     };
   },
@@ -337,7 +333,7 @@ export default {
     addAuth(scope) {
       this.$router.push({
         path: "/add_flow",
-        query: { flag: 2 } // 2 为授权这一块的
+        query: { flag: 2 }, // 2 为授权这一块的
       });
     },
     // 授权状态
@@ -399,20 +395,20 @@ export default {
     getDeclareProjectList() {
       let me = this;
       post(me, declareListProject, {})
-        .then(res => {
+        .then((res) => {
           console.log("获取到的项目数据：", res);
           if (res && res.code == 1) {
             let data = res.data;
-            let newArr = data.map(item => {
+            let newArr = data.map((item) => {
               return {
                 value: item.id,
-                label: item.name
+                label: item.name,
               };
             });
             me.projects = newArr;
           }
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("获取所属项目数据异常：", err);
           me.$message.error(err.msg || "获取所属项目异常，请稍后再试");
         });
@@ -433,7 +429,7 @@ export default {
       if ((startTime && !endTime) || (!startTime && endTime)) {
         me.$message({
           type: "warning",
-          message: "请完善日期的限制"
+          message: "请完善日期的限制",
         });
         return;
       }
@@ -471,8 +467,8 @@ export default {
         eqInt_grant_status: me.screenData.roleStatus, // 授权
         eqInt_publish_status: me.screenData.sendStatus, // 发布
         "gtString_ffd.create_time": startTime, // 开始时间
-        "ltString_ffd.create_time": endTime // 结束时间
-      }).then(res => {
+        "ltString_ffd.create_time": endTime, // 结束时间
+      }).then((res) => {
         console.log("申报流程得到的数据：", res);
         if (res && res.code == 1) {
           const { data, totalCount } = res;
@@ -518,10 +514,11 @@ export default {
         query: {
           flag: 2,
           flowId: scope.FLOW_ID,
-          declaId: scope.declarationFlowId,
+          declarationFlowId: scope.declarationFlowId,
           flowName: scope.declarationName,
-          declaId: scope.declarationId
-        }
+          declaId: scope.declarationId,
+          CandE: 1,
+        },
       });
     },
     handleEdit(scope) {
@@ -531,10 +528,11 @@ export default {
         query: {
           flag: 2,
           flowId: scope.FLOW_ID,
-          declaId: scope.declarationFlowId,
+          declarationFlowId: scope.declarationFlowId,
           flowName: scope.declarationName,
-          declaId: scope.declarationId
-        }
+          declaId: scope.declarationId,
+          CandE: 2,
+        },
       });
     },
     handleSend(scope) {
@@ -545,8 +543,8 @@ export default {
           flag: 2,
           flowId: scope.FLOW_ID,
           declaId: scope.declarationFlowId,
-          flowName: scope.declarationName
-        }
+          flowName: scope.declarationName,
+        },
       });
     },
     handleRemove(scope) {
@@ -562,8 +560,8 @@ export default {
       console.log("要删除的流程id：", me.removeFlowId);
       // 请求数据....
       post1(me, deleteGrant, {
-        declarationFlowId: me.removeFlowId
-      }).then(res => {
+        declarationFlowId: me.removeFlowId,
+      }).then((res) => {
         console.log("得到的数据：", res);
         if (res && res.code == 1) {
           // 重新炫染
@@ -584,18 +582,18 @@ export default {
       let flowId = scope.FLOW_ID;
       console.log("id：", flowId);
       this.$router.push({ path: "/instanquery", query: { flowId: flowId } });
-    }
+    },
   },
 
   computed: {},
   watch: {
     // 监听排序方式是否发生了改变
-    "screenData.sortOrder": function(newVal, oldVal) {
+    "screenData.sortOrder": function (newVal, oldVal) {
       console.log("排序方式是否发生了变化：", newVal, oldVal);
-      this.pagenum = 1;
+      // this.pagenum = 1;
       // 请求
       this.getTableData();
-    }
+    },
   },
 
   created() {},
@@ -604,7 +602,7 @@ export default {
     this.getTableData();
     // 获取所属项目的数据
     this.getDeclareProjectList();
-  }
+  },
 };
 </script>
 <style scoped>

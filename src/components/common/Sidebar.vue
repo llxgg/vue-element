@@ -56,37 +56,49 @@ export default {
           subs: [
             {
               index: "dashboard",
-              title: "政策管理"
-            }
-          ]
+              title: "政策认领",
+            },
+            {
+              index: "policydeploy",
+              title: "政策配置",
+            },
+          ],
         },
         {
           index: "2",
           title: "项目管理",
           subs: [
             {
-              index: "project",
-              title: "项目管理"
-            }
-          ]
+              index: "projectclaim",
+              title: "项目认领",
+            },
+            {
+              index: "projectdeploy",
+              title: "项目配置",
+            },
+            {
+              index: "projectdeclare",
+              title: "项目申报",
+            },
+          ],
         },
         {
           index: "3",
           title: "表单配置",
           subs: [
             {
-              index: "tablemanage",
-              title: "表单管理"
+              index: "datebase",
+              title: "数据源管理",
             },
             {
-              index: "datebase",
-              title: "数据源管理"
-            }
-            // {
-            //     index: 'control',
-            //     title:'控件管理'
-            // }
-          ]
+              index: "tablemanage",
+              title: "表单管理",
+            },
+            {
+              index: "pageDesign",
+              title: "页面设计",
+            },
+          ],
         },
         {
           index: "4",
@@ -94,40 +106,44 @@ export default {
           subs: [
             {
               index: "flowdefine",
-              title: "流程定义配置"
+              title: "流程定义配置",
             },
-              {
+            {
               index: "flowdeclare",
-              title: "申报流程配置"
+              title: "申报流程配置",
             },
             {
               index: "flowauth",
-              title: "流程授权"
+              title: "流程授权",
             },
             {
               index: "instanquery",
-              title: "流程实例"
-            }
-          ]
+              title: "流程实例",
+            },
+          ],
         },
         {
           index: "5",
-          title: "形式审核",
+          title: "审核管理",
           subs: [
             {
               index: "policyaudit",
-              title: "政策审核"
+              title: "待审核政策",
             },
             {
               index: "manageaudit",
-              title: "项目审核"
+              title: "已审核政策",
             },
             {
-              index: "flowaudit",
-              title: "流程审核"
-            }
-          ]
-        }
+              index: "auditproject",
+              title: "待审核项目",
+            },
+            {
+              index: "auditedproject",
+              title: "已审核项目",
+            },
+          ],
+        },
         // {
         //     icon: 'el-icon-lx-calendar',
         //     index: '6',
@@ -197,7 +213,7 @@ export default {
         //         }
         //     ]
         // }
-      ]
+      ],
     };
   },
   watch: {
@@ -207,12 +223,12 @@ export default {
     //     if(fullPath == "/add_flow"){
     //     }
     // }
-    parentPath: function(newVal) {}
+    parentPath: function (newVal) {},
   },
 
   created() {
     // 通过 Event Bus 进行组件间通信，来折叠侧边栏
-    bus.$on("collapse", msg => {
+    bus.$on("collapse", (msg) => {
       this.collapse = msg;
     });
 
@@ -226,22 +242,57 @@ export default {
       console.log("左侧菜单栏那个高亮：", this.$route.path, this.$route.query);
       // var reg = RegExp(/_/);
       // console.log("是否是子目录：", reg.test(this.$route.path));
+      let path = this.$route.path;
+      let parentRoute = this.$route.meta.parentRoute
+        ? this.$route.meta.parentRoute
+        : "";
+      console.log("当前子路由对应的父路由是：", parentRoute);
 
       // 1 为流程定义配置， 2 为申报流程配置， 3 为流程实例
-      if (this.$route.path == "/add_flow" && this.$route.query.flag == 1) { // 流程图对应的菜单栏高亮
+      if (this.$route.path == "/add_flow" && this.$route.query.flag == 1) {
+        // 流程图对应的菜单栏高亮
         return "flowdefine";
-      }else if (this.$route.path == "/add_flow" && this.$route.query.flag == 2) {
+      } else if (
+        this.$route.path == "/add_flow" &&
+        this.$route.query.flag == 2
+      ) {
         return "flowauth";
-      } else if (this.$route.path == "/add_flow" && this.$route.query.flag == 3) {
+      } else if (
+        this.$route.path == "/add_flow" &&
+        this.$route.query.flag == 3
+      ) {
         return "instanquery";
-      } else if (this.$route.path == "/bind_flow") { // 申报流程配置高亮
-        return "flowdeclare";
-      }else if(this.$route.path == '/process_info'){ // 流程实例高亮
-        return "instanquery";
+      } else if (this.$route.path == "/bind_flow") {
+        // 申报流程配置高亮
+        return parentRoute;
+      } else if (this.$route.path == "/process_info") {
+        // 流程实例高亮
+        return parentRoute;
+      } else if (this.$route.path == "/generte") {
+        // 表单管理
+        return parentRoute;
+      } else if (this.$route.path == "/setHtmlclass") {
+        // 表单
+        return parentRoute;
+      } else if (this.$route.path == "/generteform") {
+        // 表单
+        return parentRoute;
+      } else if (this.$route.path == "/policyselect") {
+        // 选择政策
+        return parentRoute;
+      } else if (this.$route.path == "/addpolicyproject") {
+        //项目新增
+        return parentRoute;
+      } else if (this.$route.path == "/definitiondeclaration") {
+        // 定义申报要素
+        return parentRoute;
+      } else if (this.$route.path == "/adddeclaration") {
+        // 添加申报方向
+        return parentRoute;
       } else {
         return this.$route.path.replace("/", "");
       }
-    }
+    },
 
     // defaultActive() {
     //   return console.log("拿到的是什么：", this.$router.mate);
@@ -261,7 +312,7 @@ export default {
     //     return newArr[0];
     //   }
     // }
-  }
+  },
 };
 </script>
 

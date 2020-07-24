@@ -65,7 +65,7 @@
                     :options="area_options"
                     @change="handleChange">
                     </el-cascader> -->
-                    <el-select v-model="delegateData.area" filterable placeholder="请选择" @change="changearea" :disabled="flag=='2'?false:true">
+                    <el-select v-model="delegateData.area" filterable placeholder="请选择" @change="changearea" :disabled="flag=='2'&&CandE !='1'?false:true" >
                     <el-option
                     v-for="item in area_options"
                     :key="item.id"
@@ -78,7 +78,7 @@
         <div class="SPYH_son">
             <div class="SPYH_box" style="border-right:1px solid #e7e7e7;">授权用户</div>
             <div class="SPYH_box">
-                <el-select v-model="delegateData.squser" filterable placeholder="请选择" :disabled="flag=='2'?false:true">
+                <el-select v-model="delegateData.squser" filterable placeholder="请选择" :disabled="flag=='2'&&CandE !='1'?false:true" @change="changeSq">
                     <el-option
                     v-for="item in squser_options"
                     :key="item.id"
@@ -91,7 +91,7 @@
         <div class="SPYH_son">
             <div class="SPYH_box" style="border-right:1px solid #e7e7e7;">授权角色</div>
             <div class="SPYH_box">
-                 <el-select v-model="delegateData.sqrole" filterable placeholder="请选择" :disabled="flag=='2'?false:true">
+                 <el-select v-model="delegateData.sqrole" filterable placeholder="请选择" :disabled="flag=='2'&&CandE !='1'?false:true" @change="changeSq">
                     <el-option
                     v-for="item in sqrole_options"
                     :key="item.id"
@@ -106,14 +106,14 @@
   <el-collapse-item title="审批表单" name="2" @click.native="clickcollapse(name='2')">
     <div></div>
     <div >
-         <el-checkbox-group v-model="delegateData.from" :disabled="flag=='2'?false:true">
+         <el-checkbox-group v-model="delegateData.from" :disabled="flag=='2'&&CandE !='1'?false:true" @change="changeBd">
             <el-checkbox v-for="item in from_options" :label="item.id" :key="item.id" :value="item.name" style="width:100% ;line-height: 40px;border-bottom:1px solid #e7e7e7;padding-left:12px" >{{item.name}}</el-checkbox>
         </el-checkbox-group>
     </div>
   </el-collapse-item>
   <el-collapse-item title="审批材料" name="3" @click.native="clickcollapse(name='3')">
     <div>
-        <el-checkbox-group v-model="delegateData.material" :disabled="flag=='2'?false:true">
+        <el-checkbox-group v-model="delegateData.material" :disabled="flag=='2'&&CandE !='1'?false:true" @change="changeCl">
             <el-checkbox v-for="item in material_options" :label="item.id" :key="item.id" :value="item.name" style="width:100% ;line-height: 40px;border-bottom:1px solid #e7e7e7;padding-left:12px" >{{item.name}}</el-checkbox>
         </el-checkbox-group>
     </div>
@@ -121,12 +121,12 @@
   </el-collapse-item>
   <el-collapse-item title="审批规则" name="4" @click.native="clickcollapse(name='4')" >
    <div >
-        <el-checkbox-group v-model="delegateData.rule"  :disabled="flag=='2'?false:true">
+        <el-checkbox-group v-model="delegateData.rule"  :disabled="flag=='2'&&CandE !='1'?false:true" @change="changeGz">
             <el-checkbox v-for="item in rule_options" :label="item.id" :key="item.id" :value="item.name" style="width:100% ;line-height: 40px;border-bottom:1px solid #e7e7e7;padding-left:12px">{{item.name}}</el-checkbox>
         </el-checkbox-group>
     </div>
   </el-collapse-item>
-   <el-collapse-item title="审批时限" name="5" @click.native="clickcollapse(name='5')">
+   <el-collapse-item title="审批时限" name="5" @click.native="clickcollapse(name='5')" >
     <div class="SPSX" style="padding:7px;box-sizing: border-box;">
         <div class="SPSX_son" >
             <div>
@@ -136,7 +136,8 @@
             <el-switch
                 v-model="delegateData.timeswitch"
                 active-color="#5695e2"
-                :disabled="flag=='2'?false:true"
+                :disabled="flag=='2'&&CandE !='1'?false:true"
+                @change="changeSx"
                 >
             </el-switch>
            
@@ -161,8 +162,8 @@
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             style="line-height:30px"
-            @change="changetime"
-            :disabled="flag=='2'?false:true"
+            @change="changeSx"
+            :disabled="flag=='2'&&CandE !='1'?false:true"
             >
             </el-date-picker>
         </div>
@@ -172,7 +173,7 @@
    <el-collapse-item title="审批通知" name="6" @click.native="clickcollapse(name='6')">
     <div>
         <div class="radiobox">            
-                <el-radio-group v-model="delegateData.notic_chufa" style="display:flex;flex-direction:column;justify-content：flex-start" :disabled="flag=='2'?false:true">
+                <el-radio-group v-model="delegateData.notic_chufa" style="display:flex;flex-direction:column;justify-content：flex-start" :disabled="flag=='2'&&CandE !='1'?false:true" @change="changeTz">
                    <el-radio v-for="item in notic_chufa_options" :label="item.id" :key="item.id" :value="item.name" class="SPTZ_radio" style="line-height:45px">{{item.name}}</el-radio>
                 </el-radio-group>     
         </div>
@@ -183,7 +184,7 @@
         <!-- <el-checkbox-group v-model="delegateData.notic_send">
             <el-checkbox v-for="item in notic_send_options" :label="item.name" :key="item.value" style="width:100% ;line-height: 45px;" class="SPTZ_radio">{{item.name}}</el-checkbox>
         </el-checkbox-group> -->
-        <el-radio-group v-model="delegateData.notic_send" style="display:flex;flex-direction:column;justify-content：flex-start" :disabled="flag=='2'?false:true">
+        <el-radio-group v-model="delegateData.notic_send" style="display:flex;flex-direction:column;justify-content：flex-start" :disabled="flag=='2'&&CandE !='1'?false:true" @change="changeTz">
                    <el-radio v-for="item in notic_send_options" :label="item.id" :key="item.id" :value="item.name" class="SPTZ_radio" style="line-height:45px">{{item.name}}</el-radio>
          </el-radio-group> 
     </div>
@@ -191,7 +192,7 @@
             <div style="line-height:45px;border-bottom:1px solid #e7e7e7;text-indent: 10px;">
                 接收对象
             </div>
-            <el-radio-group v-model="delegateData.notic_user" style="display:flex;flex-direction:column;justify-content：flex-start" :disabled="flag=='2'?false:true">
+            <el-radio-group v-model="delegateData.notic_user" style="display:flex;flex-direction:column;justify-content：flex-start" :disabled="flag=='2'&&CandE !='1'?false:true" @change="changeTz">
                    <el-radio v-for="item in notic_user_options" :label="item.id" :key="item.id" :value="item.name" class="SPTZ_radio" style="line-height:45px">{{item.name}}</el-radio>
             </el-radio-group> 
         <!-- <el-checkbox-group v-model="delegateData.notic_user">
@@ -214,7 +215,8 @@
             getspclxlk,saveupdaetspcl,getspclnode,
             getspgzxlk,saveupdaetspgz,getspgznode,
             saveupdatespsx,getspsxnode,
-            saveupdatesptz,getsptz
+            saveupdatesptz,getsptz,
+            getdefnode
             } 
             from "../../../util/api.js";
     import { post, post1 } from "../../../util/http.js";
@@ -260,7 +262,7 @@
                     notic_chufa:"",
                     //发送方式
                     notic_send:"",
-                    //接手对象
+                    //接收对象
                     notic_user:""
                 },
                 //获取层级数据
@@ -299,7 +301,14 @@
         tips:false,
         currentnode:this.current,
         //保存的时候需要添加的id
-        declaration_flow_id:''
+        declaration_flow_id:'',
+        //资料未完整的数组
+        defectarr:[],
+        declaration_id:'',
+
+
+        //CandE 1查看 2编辑
+        CandE:'',
             }
         },
         //监听
@@ -350,8 +359,9 @@
                      console.log('授权用户',squser_options)
 
                      this.squser_options=squser_options.data
-                    
-                      this.delegateData.squser=SPyh.data.users[0].sqyhid//授权用户
+                        if(SPyh.data.users[0]){
+                        this.delegateData.squser=SPyh.data.users[0].sqyhid//授权用户
+                      }
                     }
                      }
                     
@@ -419,6 +429,8 @@
 
             }
         },
+
+       
         }, 
 
         methods: {
@@ -434,113 +446,121 @@
                     return Array.from(new Set([...a,b]))
             },
             async clickcollapse(name){
-               
-               if(this.flag=="2"){
-                // console.log(this.delegateData)
-                let currentid =this.current?this.current.nodeId:''
-                if(currentid){
-                if(name=="1" && this.delegateData.sqrole && this.delegateData.area && this.delegateData.squser){
-                    let me =this;
-                    console.log(this.delegateData);
+                console.log(name)
+            //    if(this.flag=="2"){
+            //     // console.log(this.delegateData)
+            //     let currentid =this.current?this.current.nodeId:''
+            //     if(currentid){
+            //     if(name=="1" && this.delegateData.sqrole && this.delegateData.area && this.delegateData.squser){
+            //         let me =this;
+            //         console.log(this.delegateData);
 
-                    //保存修改审批用户-关联关系
-                    const res = await post(me,savespyh , {
-                        data:[
-                            {
-                              "sqjsid":this.delegateData.sqrole,
-                              "clcjid":this.delegateData.area,
-                              "sqyhid":this.delegateData.squser,
-                              "nodeid":currentid,
-                              "declaration_flow_id" :this.declaration_flow_id
-                            }
-                        ]
-                    },false)
-               
-                }else if(name=="2" && this.delegateData.from.length !=0){
-                    let me =this;
+            //         //保存修改审批用户-关联关系
+            //         const res = await post(me,savespyh , {
+            //             data:[
+            //                 {
+            //                   "sqjsid":this.delegateData.sqrole,
+            //                   "clcjid":this.delegateData.area,
+            //                   "sqyhid":this.delegateData.squser,
+            //                   "nodeid":currentid,
+            //                   "declaration_flow_id" :this.declaration_flow_id
+            //                 }
+            //             ]
+            //         },false)
 
-                    console.log('this.delegateData.from',this.delegateData.from)
-                    let fromdata="";
-                    // this.delegateData.from.map((item)=>{                        
-                    //     fromdata=fromdata+item+""+"_"
-                    //     fromdata.split('_')
-                    //     fromdata
-                    // })
-                    fromdata=this.delegateData.from.join("_")
-                    console.log("data",fromdata)
-
-                    //保存流程配置中的审批表单跟节点关联
-                    const res = await post(me,saveupdaetspbd , {
-                        "data":[{
-                            zcformid:fromdata,
-                            "nodeid":currentid,
-                            "declaration_flow_id" :this.declaration_flow_id  
-                        }]
-                                         
-                    },false)
-                
-                }else if(name=="3" && this.delegateData.material !=0){
-                    let me =this;
-
-                    let materialdata="";
-                    // this.delegateData.material.map((item)=>{
-                    //     materialdata=materialdata+item+""+"_"
-                    // })
-                    materialdata=this.delegateData.material.join("_")
-                    //保存流程配置中的审批材料跟节点关联
-                    const res = await post(me,saveupdaetspcl , {
-                        data:[{
-                            "materialid":materialdata,
-                            "nodeid":currentid,
-                              "declaration_flow_id" :this.declaration_flow_id 
-                        }]
-                    },false)
-                }else if(name=="4" && this.delegateData.rule !=0){
-                    let me =this;
-
-                    let ruledata="";
-                    // this.delegateData.rule.map((item)=>{
-                    //     ruledata=ruledata+item+""+"_"
-                    // })
-                    ruledata=this.delegateData.rule.join("_")
-                    //保存流程配置中的审批规则跟节点关联
-                    const res = await post(me,saveupdaetspgz , {
-                        data:[
-                            {
-                                "ruleid":ruledata,
-                                 "nodeid":currentid,
-                                   "declaration_flow_id" :this.declaration_flow_id
-                            }
-                        ]
-                    },false)
-                }else if(name=="5" && this.delegateData.time !=0 ){
-                    let me =this;
-
-                    console.log(this.delegateData.time)
-                    console.log(timestampYMD(this.delegateData.time[1]))
-                    //保存节点审批时间
-                    const res = await post1(me,saveupdatespsx , {                     
-                            "nodeid":currentid,
-                            "isset":this.delegateData.timeswitch==true?1:0,
-                            "endate":timestampYMD(this.delegateData.time[1]),
-                            "stardate":timestampYMD(this.delegateData.time[0]),
-                              "declaration_flow_id" :this.declaration_flow_id                                              
-                    },false)
-                    
-                }else if(name=="6"&& this.delegateData.notic_chufa !="" && this.delegateData.notic_send!="" && this.delegateData.notic_user!=""){   
-                    //保存审批通知
-                    let me =this;
-                    console.log('想要知道审批通知',this.delegateData)
+            //         //调用接口
+            //         this.getdelarr()
                    
-                    const res = await post1(me,saveupdatesptz , {                     
-                            "nodeid":currentid,
-                            "cffs":this.delegateData.notic_chufa,
-                            "fsfs":this.delegateData.notic_send,
-                            "jsdxlx":this.delegateData.notic_user,
-                            "declaration_flow_id" :this.declaration_flow_id                                          
-                    },false)
-                }
-                }
+
+               
+            //     }else if(name=="2" && this.delegateData.from.length !=0){
+            //         let me =this;
+
+            //         console.log('this.delegateData.from',this.delegateData.from)
+            //         let fromdata="";
+            //         // this.delegateData.from.map((item)=>{                        
+            //         //     fromdata=fromdata+item+""+"_"
+            //         //     fromdata.split('_')
+            //         //     fromdata
+            //         // })
+            //         fromdata=this.delegateData.from.join("_")
+            //         console.log("data",fromdata)
+
+            //         //保存流程配置中的审批表单跟节点关联
+            //         const res = await post(me,saveupdaetspbd , {
+            //             "data":[{
+            //                 zcformid:fromdata,
+            //                 "nodeid":currentid,
+            //                 "declaration_flow_id" :this.declaration_flow_id  
+            //             }]
+                                         
+            //         },false)
+                    
+            //         //调用接口
+            //         this.getdelarr()
+                
+            //     }else if(name=="3" && this.delegateData.material !=0){
+            //         let me =this;
+
+            //         let materialdata="";
+            //         // this.delegateData.material.map((item)=>{
+            //         //     materialdata=materialdata+item+""+"_"
+            //         // })
+            //         materialdata=this.delegateData.material.join("_")
+            //         //保存流程配置中的审批材料跟节点关联
+            //         const res = await post(me,saveupdaetspcl , {
+            //             data:[{
+            //                 "materialid":materialdata,
+            //                 "nodeid":currentid,
+            //                   "declaration_flow_id" :this.declaration_flow_id 
+            //             }]
+            //         },false)
+            //     }else if(name=="4" && this.delegateData.rule !=0){
+            //         let me =this;
+
+            //         let ruledata="";
+            //         // this.delegateData.rule.map((item)=>{
+            //         //     ruledata=ruledata+item+""+"_"
+            //         // })
+            //         ruledata=this.delegateData.rule.join("_")
+            //         //保存流程配置中的审批规则跟节点关联
+            //         const res = await post(me,saveupdaetspgz , {
+            //             data:[
+            //                 {
+            //                     "ruleid":ruledata,
+            //                      "nodeid":currentid,
+            //                        "declaration_flow_id" :this.declaration_flow_id
+            //                 }
+            //             ]
+            //         },false)
+            //     }else if(name=="5" && this.delegateData.time !=0 ){
+            //         let me =this;
+
+            //         console.log(this.delegateData.time)
+            //         console.log(timestampYMD(this.delegateData.time[1]))
+            //         //保存节点审批时间
+            //         const res = await post1(me,saveupdatespsx , {                     
+            //                 "nodeid":currentid,
+            //                 "isset":this.delegateData.timeswitch==true?1:0,
+            //                 "endate":timestampYMD(this.delegateData.time[1]),
+            //                 "stardate":timestampYMD(this.delegateData.time[0]),
+            //                   "declaration_flow_id" :this.declaration_flow_id                                              
+            //         },false)
+                    
+            //     }else if(name=="6"&& this.delegateData.notic_chufa !="" && this.delegateData.notic_send!="" && this.delegateData.notic_user!=""){   
+            //         //保存审批通知
+            //         let me =this;
+            //         console.log('想要知道审批通知',this.delegateData)
+                   
+            //         const res = await post1(me,saveupdatesptz , {                     
+            //                 "nodeid":currentid,
+            //                 "cffs":this.delegateData.notic_chufa,
+            //                 "fsfs":this.delegateData.notic_send,
+            //                 "jsdxlx":this.delegateData.notic_user,
+            //                 "declaration_flow_id" :this.declaration_flow_id                                          
+            //         },false)
+            //     }
+            //     }
 
 
 
@@ -590,11 +610,9 @@
                 //         } 
                 //     }
                 // }
-                }
+                // }
             },
-            changetime(e){
-                
-            },
+            
             init(data) {
                 this.flowData = data;
             },
@@ -651,26 +669,22 @@
                  console.log('审批规则',rule_options)
                 // console.log('用户',sqyonghu)
             },
-            //选择处理层级回显授权用户
-            async changearea(e){
-                let me = this;
-                this.squser_options=[]
-                this.delegateData.squser=''
-                // console.log('this.current',this.current)
-                console.log(e)
-                 // //授权用户
-                const squser_options = await post1(me, sqyonghu, {
-                    grouptype: 'org',
-                    groupId:`${e}`
+            
+
+            async getdelarr(){
+                let me =this
+                //先获取为完成的节点信息
+                const res = await post1(me, getdefnode, {
+                    declaraionId:this.declaration_id 
                 },false)
-                console.log('授权用户',squser_options)
-                // console.log(squser_options)
-                this.squser_options=squser_options.data
+
+                console.log("getdefnode-------------",res)
+                if(res.data){
+                    this.defectarr=res.data
+                    this.$emit("getdefarr", this.defectarr);
+                }
+
             },
-
-
-
-
 
              //审批用户提示
                 handleTips() {
@@ -678,19 +692,208 @@
                    
                 },
                 onConfirm() { },
-                onCancel() { }
+                onCancel() { },
 
+                //用组件方法来调保存的接口开始
+                //审批用户
+                //审批的处理层级
+                //选择处理层级回显授权用户
+                async changearea(e){
+                    let me = this;
+                    this.squser_options=[]
+                    this.delegateData.squser=''
+                    // console.log('this.current',this.current)
+                    console.log(e)
+                    // //授权用户
+                    const squser_options = await post1(me, sqyonghu, {
+                        grouptype: 'org',
+                        groupId:`${e}`
+                    },false)
+                    console.log('授权用户',squser_options)
+                    // console.log(squser_options)
+                    this.squser_options=squser_options.data
+
+                    //调保存的接口
+                    let currentid =this.current?this.current.nodeId:false
+                    if(currentid){
+                        let me =this;
+                        console.log(this.delegateData);
+
+                        //保存修改审批用户-关联关系
+                        const res = await post(me,savespyh , {
+                            data:[
+                                {
+                                    "sqjsid":this.delegateData.sqrole?this.delegateData.sqrole:' ',
+                                    "clcjid":this.delegateData.area?this.delegateData.area:' ',
+                                    "sqyhid":this.delegateData.squser?this.delegateData.squser:' ',
+                                    "nodeid":currentid,
+                                    "declaration_flow_id" :this.declaration_flow_id
+                                }
+                            ]
+                        },false)
+
+                        //调用接口
+                        this.getdelarr()
+                    }
+                },
+
+                //授权用户和授权角色
+                async changeSq(){
+                    //调保存的接口
+                    let currentid =this.current?this.current.nodeId:false
+                    if(currentid){
+                        let me =this;
+                        console.log(this.delegateData);
+
+                        //保存修改审批用户-关联关系
+                        const res = await post(me,savespyh , {
+                            data:[
+                                {
+                                    "sqjsid":this.delegateData.sqrole?this.delegateData.sqrole:' ',
+                                    "clcjid":this.delegateData.area?this.delegateData.area:' ',
+                                    "sqyhid":this.delegateData.squser?this.delegateData.squser:' ',
+                                    "nodeid":currentid,
+                                    "declaration_flow_id" :this.declaration_flow_id
+                                }
+                            ]
+                        },false)
+
+                        //调用接口
+                        this.getdelarr()
+                    }
+                },
+
+                //审批表单
+               async changeBd(){
+                    //调保存的接口
+                    let currentid =this.current?this.current.nodeId:false
+                    if(currentid){
+                    let me =this;                
+                    console.log('this.delegateData.from',this.delegateData.from)
+                    let fromdata="";
+                    fromdata=this.delegateData.from.join("_")
+                    console.log("data",fromdata)
+
+                    //保存流程配置中的审批表单跟节点关联
+                    const res = await post(me,saveupdaetspbd , {
+                        "data":[{
+                            zcformid:fromdata,
+                            "nodeid":currentid,
+                            "declaration_flow_id" :this.declaration_flow_id  
+                        }]
+                                            
+                    },false)
+                    
+                    //调用接口
+                    this.getdelarr()
+                    }
+                },
+
+                //审批材料
+               async changeCl(){
+                    //调保存的接口
+                    let currentid =this.current?this.current.nodeId:false
+                    if(currentid){
+                        let me =this;
+
+                        let materialdata="";
+                        materialdata=this.delegateData.material.join("_")
+                        //保存流程配置中的审批材料跟节点关联
+                        const res = await post(me,saveupdaetspcl , {
+                            data:[{
+                                "materialid":materialdata,
+                                "nodeid":currentid,
+                                "declaration_flow_id" :this.declaration_flow_id 
+                            }]
+                        },false)
+                        }
+                    },
+              
+
+                //审批规则
+               async changeGz(){
+                    //调保存的接口
+                    let currentid =this.current?this.current.nodeId:false
+                    if(currentid){
+                    let me =this;
+
+                    let ruledata="";
+                    // this.delegateData.rule.map((item)=>{
+                    //     ruledata=ruledata+item+""+"_"
+                    // })
+                    ruledata=this.delegateData.rule.join("_")
+                    //保存流程配置中的审批规则跟节点关联
+                    const res = await post(me,saveupdaetspgz , {
+                        data:[
+                            {
+                                "ruleid":ruledata,
+                                "nodeid":currentid,
+                                "declaration_flow_id" :this.declaration_flow_id
+                            }
+                        ]
+                    },false)
+                    }
+                },
+
+                //审批时限
+               async changeSx(){
+                    //调保存的接口
+                    let currentid =this.current?this.current.nodeId:false
+                    if(currentid){
+                         let me =this;
+
+                        console.log(this.delegateData.time)
+                        console.log(timestampYMD(this.delegateData.time[1]))
+                        //保存节点审批时间
+                        const res = await post1(me,saveupdatespsx , {                     
+                                "nodeid":currentid,
+                                "isset":this.delegateData.timeswitch==true?1:0,
+                                "endate":this.delegateData.time[1]?timestampYMD(this.delegateData.time[1]):' ',
+                                "stardate":this.delegateData.time[0]?timestampYMD(this.delegateData.time[0]):' ',
+                                "declaration_flow_id" :this.declaration_flow_id                                              
+                        },false)
+                    }
+                },
+
+                //审批通知
+               async changeTz(){
+                    //调保存的接口
+                    let currentid =this.current?this.current.nodeId:false
+                    if(currentid){
+                        //保存审批通知
+                        let me =this;
+                        // console.log('想要知道审批通知',this.delegateData)
+                        
+                        const res = await post1(me,saveupdatesptz , {                     
+                                "nodeid":currentid,
+                                "cffs":this.delegateData.notic_chufa?this.delegateData.notic_chufa:' ',
+                                "fsfs":this.delegateData.notic_send?this.delegateData.notic_send:' ',
+                                "jsdxlx":this.delegateData.notic_user?this.delegateData.notic_user:' ',
+                                "declaration_flow_id" :this.declaration_flow_id                                          
+                        },false)
+                    }
+                },
+
+
+    
         },
             created() {
             // 获取传递进来的页面名称
             this.flag = this.$route.query.flag;
             this.declaration_flow_id=this.$route.query.declarationFlowId?this.$route.query.declarationFlowId:''
+            this.declaration_id=this.$route.query.declaId?this.$route.query.declaId:''
             console.log(this.flag)
             console.log("this.declaration_flow_id",this.declaration_flow_id)
+
+             //知道此页面是查看还是编辑CandE 1是查看,2是编辑
+            this.CandE = this.$route.query.CandE?this.$route.query.CandE:'';
 
             this.flag !='1'?this.getoption():''
             
             console.log("this.current",this.current)
+
+            //获取未完成节点信息
+            this.declaration_id?this.getdelarr():''
 
         },
       
